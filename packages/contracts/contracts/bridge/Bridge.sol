@@ -24,6 +24,12 @@ contract Bridge is BridgeStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
     event DepositedLiquidity(bytes32 tokenId, address account, uint256 amount, uint256 liquidity);
     event WithdrawnLiquidity(bytes32 tokenId, address account, uint256 amount, uint256 liquidity);
 
+    event Received(address, uint256);
+
+    receive() external payable {
+        emit Received(msg.sender, msg.value);
+    }
+
     modifier onlyValidator(address _account) {
         require(validatorContract.isValidator(_account), "1000");
         _;
