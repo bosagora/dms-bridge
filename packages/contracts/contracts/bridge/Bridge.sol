@@ -18,12 +18,6 @@ import "../lib/BridgeLib.sol";
 contract Bridge is BridgeStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable, IBridge, IBridgeLiquidity {
     event TokenRegistered(bytes32 tokenId, address tokenAddress);
 
-    event BridgeDeposited(bytes32 tokenId, bytes32 depositId, address account, uint256 amount);
-    event BridgeWithdrawn(bytes32 tokenId, bytes32 withdrawId, address account, uint256 amount);
-
-    event DepositedLiquidity(bytes32 tokenId, address account, uint256 amount, uint256 liquidity);
-    event WithdrawnLiquidity(bytes32 tokenId, address account, uint256 amount, uint256 liquidity);
-
     event Received(address, uint256);
 
     receive() external payable {
@@ -111,7 +105,7 @@ contract Bridge is BridgeStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         if (tokenInfos[_tokenId].native) {
             DepositData memory data = DepositData({ tokenId: _tokenId, account: msg.sender, amount: msg.value });
             deposits[_depositId] = data;
-            emit BridgeDeposited(_tokenId, _depositId, data.account, data.amount);
+            emit BridgeDeposited(_tokenId, _depositId, data.account, data.amount, 0);
         } else {
             require(_amount % 1 gwei == 0, "1030");
             require(_amount > tokenInfos[_tokenId].fee * 2, "1031");
@@ -120,7 +114,7 @@ contract Bridge is BridgeStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
             if (token.delegatedTransfer(_account, address(this), _amount, _signature)) {
                 DepositData memory data = DepositData({ tokenId: _tokenId, account: _account, amount: _amount });
                 deposits[_depositId] = data;
-                emit BridgeDeposited(_tokenId, _depositId, data.account, data.amount);
+                emit BridgeDeposited(_tokenId, _depositId, data.account, data.amount, 0);
             }
         }
     }
@@ -156,7 +150,7 @@ contract Bridge is BridgeStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
                     payable(_account).transfer(withdrawalAmount);
                     payable(feeAccount).transfer(tokenInfos[_tokenId].fee);
                     withdraws[_withdrawId].executed = true;
-                    emit BridgeWithdrawn(_tokenId, _withdrawId, _account, withdrawalAmount);
+                    emit BridgeWithdrawn(_tokenId, _withdrawId, _account, withdrawalAmount, 0);
                 }
             }
         } else {
@@ -184,7 +178,7 @@ contract Bridge is BridgeStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
                     token.transfer(_account, withdrawalAmount);
                     token.transfer(feeAccount, tokenInfos[_tokenId].fee);
                     withdraws[_withdrawId].executed = true;
-                    emit BridgeWithdrawn(_tokenId, _withdrawId, _account, withdrawalAmount);
+                    emit BridgeWithdrawn(_tokenId, _withdrawId, _account, withdrawalAmount, 0);
                 }
             }
         }
@@ -204,7 +198,7 @@ contract Bridge is BridgeStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
                     payable(withdraws[_withdrawId].account).transfer(withdrawalAmount);
                     payable(feeAccount).transfer(tokenInfos[tokenId].fee);
                     withdraws[_withdrawId].executed = true;
-                    emit BridgeWithdrawn(tokenId, _withdrawId, withdraws[_withdrawId].account, withdrawalAmount);
+                    emit BridgeWithdrawn(tokenId, _withdrawId, withdraws[_withdrawId].account, withdrawalAmount, 0);
                 }
             } else {
                 BIP20DelegatedTransfer token = tokenInfos[tokenId].token;
@@ -212,7 +206,7 @@ contract Bridge is BridgeStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
                     token.transfer(withdraws[_withdrawId].account, withdrawalAmount);
                     token.transfer(feeAccount, tokenInfos[tokenId].fee);
                     withdraws[_withdrawId].executed = true;
-                    emit BridgeWithdrawn(tokenId, _withdrawId, withdraws[_withdrawId].account, withdrawalAmount);
+                    emit BridgeWithdrawn(tokenId, _withdrawId, withdraws[_withdrawId].account, withdrawalAmount, 0);
                 }
             }
         }
