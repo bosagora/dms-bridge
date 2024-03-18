@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="table">
+
+    <sql id="latest_block_number">
+        CREATE TABLE IF NOT EXISTS latest_block_number
+        (
+            "network"           VARCHAR(32) NOT NULL,
+            "blockNumber"       BIGINT NOT NULL,
+            PRIMARY KEY ("network")
+        );
+    </sql>
+
+    <sql id="events">
+        CREATE TABLE IF NOT EXISTS events
+        (
+            "network"           VARCHAR(32) NOT NULL,
+            "depositId"         VARCHAR(66) NOT NULL,
+            "tokenId"           VARCHAR(66) NOT NULL,
+            "account"           VARCHAR(42) NOT NULL,
+            "amount"            VARCHAR(256) NOT NULL,
+            "blockNumber"       BIGINT NOT NULL,
+            "transactionHash"   VARCHAR(66) NOT NULL,
+            PRIMARY KEY ("network", "depositId")
+        );
+    </sql>
+
+    <sql id="validators">
+        CREATE TABLE IF NOT EXISTS validators
+        (
+            "validators"        VARCHAR(42) NOT NULL,
+            "depositId"         VARCHAR(66) NOT NULL,
+            "done"              VARCHAR(1) DEFAULT 'N',
+            PRIMARY KEY ("validators", "depositId")
+        );
+    </sql>
+
+    <select id="create_table">
+        <include refid="latest_block_number"/>
+        <include refid="events"/>
+    </select>
+
+    <select id="drop_table">
+        DROP TABLE latest_block_number;
+        DROP TABLE events;
+    </select>
+
+    <select id="clear_table">
+        TRUNCATE TABLE latest_block_number;
+        TRUNCATE TABLE events;
+    </select>
+
+</mapper>

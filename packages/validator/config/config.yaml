@@ -1,0 +1,50 @@
+################################################################################
+##                             Network interface                              ##
+################################################################################
+server:
+    # Address to which we bind (default: 127.0.0.1)
+    address: "${HOST_IP}"
+    # Port on which we bind (default: 7070)
+    port: "${HOST_PORT}"
+
+################################################################################
+##                               Database options                             ##
+################################################################################
+database:
+    host: "${DATABASE_HOST}"
+    user: "${DATABASE_USER}"
+    password: "${DATABASE_PASSWORD}"
+    database: "${DATABASE_NAME}"
+    scheme: "${DATABASE_SCHEME}"
+    port: "${DATABASE_PORT}"
+    connectionTimeoutMillis: 5000
+    max: 100
+
+################################################################################
+##                               Logging options                              ##
+################################################################################
+logging:
+    # Values: error, warn, info, http, verbose, debug, silly
+    level: verbose
+
+################################################################################
+##                             Scheduler options                              ##
+################################################################################
+scheduler:
+    enable: true
+    items:
+        - name: bridge
+          enable: true
+          expression: "*/10 * * * * *"
+
+bridge:
+    networkAContractAddress: "0x10Da82287982A7e3E718F9adE892a566F92C1Be2"
+    networkAName: "hardhat"
+    networkBContractAddress: "0x10Da82287982A7e3E718F9adE892a566F92C1Be2"
+    networkBName: "hardhat"
+    validators:
+        - "${BRIDGE_VALIDATOR1}"
+        - "${BRIDGE_VALIDATOR2}"
+        - "${BRIDGE_VALIDATOR3}"
+        - "${BRIDGE_VALIDATOR4}"
+        - "${BRIDGE_VALIDATOR5}"

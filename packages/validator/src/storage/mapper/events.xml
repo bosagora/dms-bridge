@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="events">
+
+    <insert id="postEvents">
+        INSERT INTO events ("network", "depositId", "tokenId", "account", "amount", "blockNumber", "transactionHash")
+        VALUES
+        <foreach item="item" collection="events" separator=",">
+            (
+                #{item.network},
+                #{item.depositId},
+                #{item.tokenId},
+                #{item.account},
+                #{item.amount},
+                #{item.blockNumber},
+                #{item.transactionHash}
+            )
+        </foreach>
+        ON CONFLICT ("network", "depositId") DO NOTHING;
+    </insert>
+
+    <select id="getEvents">
+        SELECT * FROM events WHERE "network" = #{network} AND "blockNumber" <![CDATA[>=]]> #{from}
+        ORDER BY "blockNumber" ASC;
+    </select>
+</mapper>
