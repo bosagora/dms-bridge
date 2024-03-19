@@ -9,6 +9,20 @@ export interface IBridgeDepositedEvent {
     tokenId: string;
     account: string;
     amount: BigNumber;
-    blockNumber: BigInt;
+    blockNumber: bigint;
     transactionHash: string;
+    withdrawStatus: WithdrawStatus;
+    withdrawTimestamp: bigint;
+}
+
+export enum WithdrawStatus {
+    None = 0,
+    Sent = 1,
+    Confirmed = 2,
+    Executed = 3,
+}
+
+export enum ValidatorType {
+    A,
+    B,
 }

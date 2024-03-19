@@ -24,6 +24,7 @@ import * as hre from "hardhat";
 import * as assert from "assert";
 import path from "path";
 import { EventCollector } from "../src/scheduler/EventCollector";
+import { ValidatorType } from "../src/types";
 
 chai.use(solidity);
 
@@ -34,7 +35,7 @@ interface IShopData {
     wallet: Wallet;
 }
 
-describe("Test for Ledger", () => {
+describe("Test for EventCollector", () => {
     const deployments = new Deployments();
     let tokenContract: BIP20DelegatedTransfer;
     let bridgeContract: Bridge;
@@ -45,6 +46,7 @@ describe("Test for Ledger", () => {
     const fee = Amount.make(5, 18).value;
 
     let collector: EventCollector;
+    let validatorWallet: Wallet;
 
     const deployAllContract = async (shopData: IShopData[]) => {
         await deployments.doDeployAll();
@@ -55,11 +57,12 @@ describe("Test for Ledger", () => {
     before("Create Config", async () => {
         config = new Config();
         config.readFromFile(path.resolve(process.cwd(), "config", "config_test.yaml"));
+        validatorWallet = new Wallet(config.bridge.validators[0]);
         storage = await ValidatorStorage.make(config.database);
         await storage.clearTestDB();
     });
 
-    after("Stop TestServer", async () => {
+    after("Stop DB", async () => {
         await storage.dropTestDB();
     });
 
@@ -71,12 +74,19 @@ describe("Test for Ledger", () => {
     });
 
     it("Create EventCollector", async () => {
-        collector = new EventCollector(config, storage, "hardhat", bridgeContract.address, 1n);
+        collector = new EventCollector(
+            storage,
+            ValidatorType.A,
+            "hardhat",
+            bridgeContract.address,
+            1n,
+            validatorWallet
+        );
     });
 
     it("EventCollector.work()", async () => {
         await collector.work();
-        const events = await storage.getEvents("hardhat", 0n);
+        const events = await storage.getEvents(validatorWallet.address, ValidatorType.A, "hardhat", 0n);
         assert.deepStrictEqual(events.length, 0);
     });
 
@@ -139,7 +149,7 @@ describe("Test for Ledger", () => {
 
     it("EventCollector.work()", async () => {
         await collector.work();
-        const events = await storage.getEvents("hardhat", 0n);
+        const events = await storage.getEvents(validatorWallet.address, ValidatorType.A, "hardhat", 0n);
         assert.deepStrictEqual(events.length, 1);
         assert.deepStrictEqual(events[0].network, "hardhat");
         assert.deepStrictEqual(events[0].tokenId, tokenId0);
@@ -179,7 +189,7 @@ describe("Test for Ledger", () => {
 
     it("EventCollector.work()", async () => {
         await collector.work();
-        const events = await storage.getEvents("hardhat", 0n);
+        const events = await storage.getEvents(validatorWallet.address, ValidatorType.A, "hardhat", 0n);
         assert.deepStrictEqual(events.length, 2);
         assert.deepStrictEqual(events[1].network, "hardhat");
         assert.deepStrictEqual(events[1].tokenId, tokenId1);

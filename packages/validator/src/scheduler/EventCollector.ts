@@ -1,56 +1,59 @@
 import { IBridge__factory } from "../../typechain-types";
-import { Config } from "../common/Config";
-import { logger } from "../common/Logger";
 import { ValidatorStorage } from "../storage/ValidatorStorage";
 
-import { BigNumber } from "ethers";
+import { BigNumber, Wallet } from "ethers";
 import * as hre from "hardhat";
+import { logger } from "../common/Logger";
+import { ValidatorType } from "../types";
 
 export class EventCollector {
+    private wallet: Wallet;
+    private readonly type: ValidatorType;
     private readonly network: string;
     private readonly contractAddress: string;
     private readonly startNumber: bigint;
     private contract: any;
-    private config: Config | undefined;
     private storage: ValidatorStorage;
 
     constructor(
-        config: Config,
         storage: ValidatorStorage,
+        type: ValidatorType,
         network: string,
         contractAddress: string,
-        startBlockNumber: bigint
+        startBlockNumber: bigint,
+        wallet: Wallet
     ) {
-        this.config = config;
         this.storage = storage;
+        this.type = type;
         this.network = network;
         this.contractAddress = contractAddress;
         this.startNumber = startBlockNumber;
+        this.wallet = wallet;
     }
 
-    private async getLastBlockNumber(): Promise<BigNumber> {
+    private async getLatestBlockNumber(): Promise<bigint> {
         const block = await hre.ethers.provider.getBlock("latest");
-        return BigNumber.from(block.number);
+        return BigInt(block.number);
     }
 
     public async work() {
         hre.changeNetwork(this.network);
 
-        let latestCollectedNumber = await this.storage.getLatestNumber(this.network);
+        const latestBlockNumber = await this.getLatestBlockNumber();
+
+        let from: BigInt;
+        const latestCollectedNumber = await this.storage.getLatestNumber(this.wallet.address, this.type, this.network);
         if (latestCollectedNumber === undefined) {
-            latestCollectedNumber = this.startNumber - 1n;
+            from = this.startNumber;
+        } else {
+            from = latestCollectedNumber + 1n;
+            if (from > latestBlockNumber) from = this.startNumber;
         }
-
-        const block = await hre.ethers.provider.getBlock("latest");
-        const lastBlockNumber = BigInt(block.number);
-
-        let from = latestCollectedNumber + 1n;
-        if (from > lastBlockNumber) from = this.startNumber;
 
         this.contract = new hre.web3.eth.Contract(IBridge__factory.abi as any, this.contractAddress);
         const events = await this.contract.getPastEvents("BridgeDeposited", {
             fromBlock: Number(from),
-            toBlock: Number(lastBlockNumber),
+            toBlock: Number(latestBlockNumber),
         });
 
         const depositEvents = events.map((m: any) => {
@@ -65,8 +68,8 @@ export class EventCollector {
             };
         });
 
-        if (depositEvents.length > 0) await this.storage.postEvents(depositEvents);
+        if (depositEvents.length > 0) await this.storage.postEvents(depositEvents, this.wallet.address, this.type);
 
-        await this.storage.setLatestNumber(this.network, lastBlockNumber);
+        await this.storage.setLatestNumber(this.wallet.address, this.type, this.network, latestBlockNumber);
     }
 }

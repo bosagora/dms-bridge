@@ -3,10 +3,12 @@
 <mapper namespace="events">
 
     <insert id="postEvents">
-        INSERT INTO events ("network", "depositId", "tokenId", "account", "amount", "blockNumber", "transactionHash")
+        INSERT INTO events ("validator", "type", "network", "depositId", "tokenId", "account", "amount", "blockNumber", "transactionHash")
         VALUES
         <foreach item="item" collection="events" separator=",">
             (
+                #{item.validator},
+                ${item.type},
                 #{item.network},
                 #{item.depositId},
                 #{item.tokenId},
@@ -16,11 +18,46 @@
                 #{item.transactionHash}
             )
         </foreach>
-        ON CONFLICT ("network", "depositId") DO NOTHING;
+        ON CONFLICT ("validator", "type", "network", "depositId") DO NOTHING;
     </insert>
 
     <select id="getEvents">
-        SELECT * FROM events WHERE "network" = #{network} AND "blockNumber" <![CDATA[>=]]> #{from}
+        SELECT * FROM events
+        WHERE "validator" = #{validator} AND "type" = ${type} AND "network" = #{network} AND "blockNumber" <![CDATA[>=]]> #{from}
         ORDER BY "blockNumber" ASC;
+    </select>
+
+    <select id="getNotConfirmedEvents">
+        SELECT * FROM events
+        WHERE "validator" = #{validator} AND "type" = ${type} AND "network" = #{network} AND "withdrawStatus" <![CDATA[<]]> 2
+        ORDER BY "blockNumber" ASC;
+    </select>
+
+    <select id="getNotExecutedEvents">
+        SELECT * FROM events
+        WHERE "validator" = #{validator} AND "type" = ${type} AND "network" = #{network} AND "withdrawStatus" <![CDATA[<]]> 3
+        ORDER BY "blockNumber" ASC;
+    </select>
+
+    <select id="setExecuted">
+        UPDATE events
+        SET
+            "withdrawStatus" = 3
+        WHERE "validator" = #{validator} AND "type" = ${type} AND "network" = #{network} AND "depositId" = #{depositId};
+    </select>
+
+    <select id="setConfirmed">
+        UPDATE events
+        SET
+            "withdrawStatus" = 2
+        WHERE "validator" = #{validator} AND "type" =${type} AND "network" = #{network} AND "depositId" = #{depositId};
+    </select>
+
+    <select id="setSent">
+        UPDATE events
+        SET
+            "withdrawStatus" = 1,
+            "withdrawTimestamp" = #{withdrawTimestamp}
+        WHERE "validator" = #{validator} AND "type" =${type} AND "network" = #{network} AND "depositId" = #{depositId};
     </select>
 </mapper>

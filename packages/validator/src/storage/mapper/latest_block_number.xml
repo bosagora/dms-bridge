@@ -1,25 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="latest_block_number">
-
     <insert id="set">
         INSERT INTO latest_block_number
         (
+            "validator",
+            "type",
             "network",
             "blockNumber"
         )
         VALUES
-        (
-            #{network},
-            #{blockNumber}
-        )
-        ON CONFLICT ("network")
+            (
+                #{validator},
+                ${type},
+                #{network},
+                #{blockNumber}
+            )
+            ON CONFLICT ("validator", "type", "network")
         DO UPDATE
-        SET
+            SET
             "blockNumber" = EXCLUDED."blockNumber";
     </insert>
 
     <select id="get">
-        SELECT * FROM latest_block_number WHERE network = #{network};
+        SELECT * FROM latest_block_number WHERE "validator" = #{validator} AND "type" = ${type} AND network = #{network};
     </select>
 </mapper>

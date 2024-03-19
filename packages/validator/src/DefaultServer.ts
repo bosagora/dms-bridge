@@ -8,6 +8,7 @@ import { WebService } from "./service/WebService";
 import { ValidatorStorage } from "./storage/ValidatorStorage";
 
 import { register } from "prom-client";
+import { Validator } from "./scheduler/Validator";
 
 export class DefaultServer extends WebService {
     /**
@@ -20,6 +21,7 @@ export class DefaultServer extends WebService {
 
     public readonly defaultRouter: DefaultRouter;
     public readonly storage: ValidatorStorage;
+    public readonly validators: Validator[];
 
     /**
      * Constructor
@@ -36,6 +38,7 @@ export class DefaultServer extends WebService {
         this.config = config;
         this.storage = storage;
         this.defaultRouter = new DefaultRouter(this, this.metrics);
+        this.validators = this.config.bridge.validators.map((m) => new Validator(this.config, this.storage, m));
 
         if (!schedules) schedules = [];
         schedules.forEach((m) => this.schedules.push(m));
@@ -43,6 +46,7 @@ export class DefaultServer extends WebService {
             m.setOption({
                 config: this.config,
                 storage: this.storage,
+                validators: this.validators,
             })
         );
     }

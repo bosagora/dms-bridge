@@ -1,9 +1,9 @@
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
 import "@nomiclabs/hardhat-web3";
-import "hardhat-change-network";
 import "@openzeppelin/hardhat-upgrades";
 import "@typechain/hardhat";
+import "hardhat-change-network";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
 import "solidity-docgen";
@@ -33,39 +33,6 @@ function getAccounts() {
     } else {
         process.env.FEE = Wallet.createRandom().privateKey;
         accounts.push(process.env.FEE);
-    }
-
-    if (
-        process.env.LINK_VALIDATOR1 !== undefined &&
-        process.env.LINK_VALIDATOR1.trim() !== "" &&
-        reg_bytes64.test(process.env.LINK_VALIDATOR1)
-    ) {
-        accounts.push(process.env.LINK_VALIDATOR1);
-    } else {
-        process.env.LINK_VALIDATOR1 = Wallet.createRandom().privateKey;
-        accounts.push(process.env.LINK_VALIDATOR1);
-    }
-
-    if (
-        process.env.LINK_VALIDATOR2 !== undefined &&
-        process.env.LINK_VALIDATOR2.trim() !== "" &&
-        reg_bytes64.test(process.env.LINK_VALIDATOR2)
-    ) {
-        accounts.push(process.env.LINK_VALIDATOR2);
-    } else {
-        process.env.LINK_VALIDATOR2 = Wallet.createRandom().privateKey;
-        accounts.push(process.env.LINK_VALIDATOR2);
-    }
-
-    if (
-        process.env.LINK_VALIDATOR3 !== undefined &&
-        process.env.LINK_VALIDATOR3.trim() !== "" &&
-        reg_bytes64.test(process.env.LINK_VALIDATOR3)
-    ) {
-        accounts.push(process.env.LINK_VALIDATOR3);
-    } else {
-        process.env.LINK_VALIDATOR3 = Wallet.createRandom().privateKey;
-        accounts.push(process.env.LINK_VALIDATOR3);
     }
 
     if (

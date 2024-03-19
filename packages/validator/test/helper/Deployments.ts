@@ -112,7 +112,13 @@ export class Deployments {
     }
 
     public async doDeployAll() {
-        const deployers: FnDeployer[] = [deployToken, deployBridgeValidator, deployBridge];
+        const deployers: FnDeployer[] = [
+            deployToken,
+            deployBridgeValidator,
+            deployBridge,
+            deployBridgeA,
+            deployBridgeB,
+        ];
         for (const elem of deployers) {
             try {
                 await elem(this.accounts, this);
@@ -164,7 +170,7 @@ async function deployBridgeValidator(accounts: IAccount, deployment: Deployments
     const factory = await ethers.getContractFactory("BridgeValidator");
     const contract = (await upgrades.deployProxy(
         factory.connect(accounts.deployer),
-        [accounts.bridgeValidators.map((m) => m.address), 2],
+        [accounts.bridgeValidators.map((m) => m.address), 3],
         {
             initializer: "initialize",
             kind: "uups",
@@ -178,6 +184,52 @@ async function deployBridgeValidator(accounts: IAccount, deployment: Deployments
 
 async function deployBridge(accounts: IAccount, deployment: Deployments) {
     const contractName = "Bridge";
+    console.log(`Deploy ${contractName}...`);
+
+    if (deployment.getContract("BridgeValidator") === undefined || deployment.getContract("TestKIOS") === undefined) {
+        console.error("Contract is not deployed!");
+        return;
+    }
+    const factory = await ethers.getContractFactory("Bridge");
+    const contract = (await upgrades.deployProxy(
+        factory.connect(accounts.deployer),
+        [await deployment.getContractAddress("BridgeValidator"), accounts.fee.address],
+        {
+            initializer: "initialize",
+            kind: "uups",
+        }
+    )) as Bridge;
+    await contract.deployed();
+    await contract.deployTransaction.wait();
+    deployment.addContract(contractName, contract.address, contract);
+    console.log(`Deployed ${contractName} to ${contract.address}`);
+}
+
+async function deployBridgeA(accounts: IAccount, deployment: Deployments) {
+    const contractName = "BridgeA";
+    console.log(`Deploy ${contractName}...`);
+
+    if (deployment.getContract("BridgeValidator") === undefined || deployment.getContract("TestKIOS") === undefined) {
+        console.error("Contract is not deployed!");
+        return;
+    }
+    const factory = await ethers.getContractFactory("Bridge");
+    const contract = (await upgrades.deployProxy(
+        factory.connect(accounts.deployer),
+        [await deployment.getContractAddress("BridgeValidator"), accounts.fee.address],
+        {
+            initializer: "initialize",
+            kind: "uups",
+        }
+    )) as Bridge;
+    await contract.deployed();
+    await contract.deployTransaction.wait();
+    deployment.addContract(contractName, contract.address, contract);
+    console.log(`Deployed ${contractName} to ${contract.address}`);
+}
+
+async function deployBridgeB(accounts: IAccount, deployment: Deployments) {
+    const contractName = "BridgeB";
     console.log(`Deploy ${contractName}...`);
 
     if (deployment.getContract("BridgeValidator") === undefined || deployment.getContract("TestKIOS") === undefined) {
