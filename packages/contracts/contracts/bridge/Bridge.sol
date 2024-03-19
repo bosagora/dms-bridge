@@ -228,6 +228,11 @@ contract Bridge is BridgeStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         return false;
     }
 
+    /// @notice 입력된 주소에 대해 검증이 되었는지를 리턴합니다.
+    function isConfirmedOf(bytes32 _withdrawId, address validator) external view override returns (bool) {
+        return confirmations[_withdrawId][validator];
+    }
+
     /// @notice 예치정보를 조회합니다
     function getDepositInfo(bytes32 _depositId) external view override returns (DepositData memory) {
         return deposits[_depositId];

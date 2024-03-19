@@ -37,6 +37,8 @@ interface IBridge {
 
     function isConfirmed(bytes32 _withdrawId) external view returns (bool);
 
+    function isConfirmedOf(bytes32 _withdrawId, address validator) external view returns (bool);
+
     function getDepositInfo(bytes32 _depositId) external view returns (DepositData memory);
 
     function getWithdrawInfo(bytes32 _withdrawId) external view returns (WithdrawData memory);
