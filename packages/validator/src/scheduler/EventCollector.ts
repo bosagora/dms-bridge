@@ -37,7 +37,7 @@ export class EventCollector {
     }
 
     public async work() {
-        hre.changeNetwork(this.network);
+        await hre.changeNetwork(this.network);
 
         const latestBlockNumber = await this.getLatestBlockNumber();
 

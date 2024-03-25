@@ -3,7 +3,7 @@ import "@nomiclabs/hardhat-waffle";
 import "@nomiclabs/hardhat-web3";
 import "@openzeppelin/hardhat-upgrades";
 import "@typechain/hardhat";
-import "hardhat-change-network";
+import "./hardhat-change-network";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
 import "solidity-docgen";
