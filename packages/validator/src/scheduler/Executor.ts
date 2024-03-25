@@ -46,7 +46,7 @@ export class Executor {
         );
         if (events.length === 0) return;
 
-        hre.changeNetwork(this.targetNetwork);
+        await hre.changeNetwork(this.targetNetwork);
         const signer = new NonceManager(new GasPriceManager(this.wallet.connect(hre.ethers.provider)));
 
         const contract = new hre.ethers.Contract(
