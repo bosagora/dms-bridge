@@ -7,10 +7,12 @@ import { EthereumProvider } from "hardhat/types/provider";
 // This import is needed to let the TypeScript compiler know that it should include your type
 // extensions in your npm package's types file.
 import "hardhat/types/runtime";
+import { EthersProviderWrapper } from "@nomiclabs/hardhat-ethers/internal/ethers-provider-wrapper";
 declare module "hardhat/types/runtime" {
     interface HardhatRuntimeEnvironment {
         changeNetwork(newNetwork: string): Promise<void>;
         getProvider(newNetwork: string): Promise<EthereumProvider>;
+        getChainId(newNetwork: string): number;
     }
 }
 
@@ -19,6 +21,7 @@ extendEnvironment((hre) => {
     // We use lazyObject to avoid initializing things until they are actually
     // needed.
     const providers: { [name: string]: EthereumProvider } = {};
+    const chainIds: { [name: string]: number } = {};
 
     hre.getProvider = async function getProvider(name: string): Promise<EthereumProvider> {
         if (!providers[name]) {
@@ -44,6 +47,7 @@ extendEnvironment((hre) => {
             if (newNetwork === "hardhat") {
                 const { EthersProviderWrapper } = require("@nomiclabs/hardhat-ethers/internal/ethers-provider-wrapper");
                 (this as any).ethers.provider = new EthersProviderWrapper(this.network.provider);
+                chainIds[newNetwork] = (await (this as any).ethers.provider.getNetwork()).chainId;
             } else {
                 const httpNetConfig = this.config.networks[newNetwork] as HttpNetworkConfig;
                 const chainId = httpNetConfig.chainId || 0;
@@ -51,7 +55,12 @@ extendEnvironment((hre) => {
                     name: newNetwork,
                     chainId,
                 }) as JsonRpcProvider;
+                chainIds[newNetwork] = chainId;
             }
         }
+    };
+
+    hre.getChainId = function getChainId(name: string): number {
+        return chainIds[name];
     };
 });

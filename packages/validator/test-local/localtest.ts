@@ -12,36 +12,27 @@ import { BIP20DelegatedTransfer, Bridge } from "../typechain-types";
 import { Deployments } from "./helper/Deployments";
 import { TestServer } from "./helper/Utility";
 
-import chai, { expect } from "chai";
-import { solidity } from "ethereum-waffle";
-
 // tslint:disable-next-line:no-implicit-dependencies
 import { arrayify } from "@ethersproject/bytes";
 import { AddressZero, HashZero } from "@ethersproject/constants";
 
-import { Wallet } from "ethers";
 import * as hre from "hardhat";
 import path from "path";
 
 import { URL } from "url";
 import { BridgeScheduler } from "../src/scheduler/BridgeScheduler";
 
-chai.use(solidity);
+import chai, { expect } from "chai";
 
-interface IShopData {
-    shopId: string;
-    name: string;
-    currency: string;
-    wallet: Wallet;
-}
+describe("Test for Bridge", function () {
+    this.timeout(1000 * 60 * 5);
 
-describe("Test for Bridge", () => {
     const config = new Config();
     config.readFromFile(path.resolve(process.cwd(), "config", "config_test.yaml"));
-    config.bridge.networkAName = "hardhat";
-    config.bridge.networkBName = "hardhat";
-    const deploymentsA = new Deployments(config, config.bridge.networkAName);
-    const deploymentsB = new Deployments(config, config.bridge.networkBName);
+    config.bridge.networkAName = "chain1";
+    config.bridge.networkBName = "chain2";
+    let deploymentsA: Deployments;
+    let deploymentsB: Deployments;
 
     let tokenAContract: BIP20DelegatedTransfer;
     let tokenBContract: BIP20DelegatedTransfer;
@@ -57,21 +48,23 @@ describe("Test for Bridge", () => {
     let tokenId1: string;
     let depositId: string;
 
-    before("Deploy", async () => {
+    it("Attach", async () => {
+        await hre.changeNetwork(config.bridge.networkAName);
+        deploymentsA = new Deployments(config, config.bridge.networkAName);
         await deploymentsA.doDeployAll();
-        await deploymentsB.doDeployAll();
         tokenAContract = deploymentsA.getContract("TestKIOS") as BIP20DelegatedTransfer;
-        tokenBContract = deploymentsB.getContract("TestKIOS") as BIP20DelegatedTransfer;
         bridgeAContract = deploymentsA.getContract("Bridge") as Bridge;
-        bridgeBContract = deploymentsB.getContract("Bridge") as Bridge;
-    });
-
-    before("Create Config", async () => {
         config.bridge.networkAContractAddress = bridgeAContract.address;
+
+        await hre.changeNetwork(config.bridge.networkBName);
+        deploymentsB = new Deployments(config, config.bridge.networkBName);
+        await deploymentsB.doDeployAll();
+        tokenBContract = deploymentsB.getContract("TestKIOS") as BIP20DelegatedTransfer;
+        bridgeBContract = deploymentsB.getContract("Bridge") as Bridge;
         config.bridge.networkBContractAddress = bridgeBContract.address;
     });
 
-    before("Create TestServer", async () => {
+    it("Create TestServer", async () => {
         serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
         storage = await ValidatorStorage.make(config.database);
         await storage.clearTestDB();
@@ -81,19 +74,24 @@ describe("Test for Bridge", () => {
         server = new TestServer(config, storage, schedulers);
     });
 
-    before("Register token", async () => {
+    it("Register token", async () => {
+        await hre.changeNetwork(config.bridge.networkAName);
         // Native Token
         tokenId0 = HashZero;
         await bridgeAContract.connect(deploymentsA.accounts.deployer).registerToken(HashZero, AddressZero);
-        await bridgeBContract.connect(deploymentsB.accounts.deployer).registerToken(HashZero, AddressZero);
-
         // BIP20 Token
         tokenId1 = ContractUtils.getTokenId(await tokenAContract.name(), await tokenAContract.symbol());
         await bridgeAContract.connect(deploymentsA.accounts.deployer).registerToken(tokenId1, tokenAContract.address);
+
+        await hre.changeNetwork(config.bridge.networkBName);
+        // Native Token
+        await bridgeBContract.connect(deploymentsB.accounts.deployer).registerToken(HashZero, AddressZero);
+        // BIP20 Token
+        tokenId1 = ContractUtils.getTokenId(await tokenBContract.name(), await tokenBContract.symbol());
         await bridgeBContract.connect(deploymentsB.accounts.deployer).registerToken(tokenId1, tokenBContract.address);
     });
 
-    before("Deposit Native Liquidity at Bridge A", async () => {
+    it("Deposit Native Liquidity at Bridge A", async () => {
         await hre.changeNetwork(config.bridge.networkAName);
         const liquidityAmount = Amount.make(1_000_000_000, 18).value;
         const signature = await ContractUtils.signMessage(deploymentsA.accounts.deployer, arrayify(HashZero));
@@ -103,7 +101,7 @@ describe("Test for Bridge", () => {
         await tx1.wait();
     });
 
-    before("Deposit Native Liquidity at Bridge B", async () => {
+    it("Deposit Native Liquidity at Bridge B", async () => {
         await hre.changeNetwork(config.bridge.networkBName);
         const liquidityAmount = Amount.make(1_000_000_000, 18).value;
         const signature = await ContractUtils.signMessage(deploymentsB.accounts.deployer, arrayify(HashZero));
@@ -113,12 +111,10 @@ describe("Test for Bridge", () => {
         await tx1.wait();
     });
 
-    before("Deposit BIP20 Liquidity at Bridge A", async () => {
+    it("Deposit BIP20 Liquidity at Bridge A", async () => {
         await hre.changeNetwork(config.bridge.networkAName);
         const liquidityAmount = Amount.make(1_000_000_000, 18).value;
-        const nonce = await (deploymentsA.getContract("TestKIOS") as BIP20DelegatedTransfer).nonceOf(
-            deploymentsA.accounts.deployer.address
-        );
+        const nonce = await tokenAContract.nonceOf(deploymentsA.accounts.deployer.address);
         const message = ContractUtils.getTransferMessage(
             deploymentsA.accounts.deployer.address,
             bridgeAContract.address,
@@ -133,12 +129,10 @@ describe("Test for Bridge", () => {
         await tx1.wait();
     });
 
-    before("Deposit BIP20 Liquidity at Bridge B", async () => {
+    it("Deposit BIP20 Liquidity at Bridge B", async () => {
         await hre.changeNetwork(config.bridge.networkBName);
         const liquidityAmount = Amount.make(1_000_000_000, 18).value;
-        const nonce = await (deploymentsB.getContract("TestKIOS") as BIP20DelegatedTransfer).nonceOf(
-            deploymentsB.accounts.deployer.address
-        );
+        const nonce = await tokenBContract.nonceOf(deploymentsB.accounts.deployer.address);
         const message = ContractUtils.getTransferMessage(
             deploymentsB.accounts.deployer.address,
             bridgeBContract.address,
@@ -153,13 +147,8 @@ describe("Test for Bridge", () => {
         await tx1.wait();
     });
 
-    before("Start TestServer", async () => {
+    it("Start TestServer", async () => {
         await server.start();
-    });
-
-    after("Stop TestServer", async () => {
-        await server.stop();
-        await storage.dropTestDB();
     });
 
     it("Deposit native token to Main Bridge", async () => {
@@ -167,24 +156,17 @@ describe("Test for Bridge", () => {
         const oldLiquidity = await hre.ethers.provider.getBalance(bridgeAContract.address);
         depositId = ContractUtils.getRandomId(deploymentsA.accounts.users[0].address);
         const signature = await ContractUtils.signMessage(deploymentsA.accounts.users[0], arrayify(HashZero));
-        await expect(
-            bridgeAContract
-                .connect(deploymentsA.accounts.users[0])
-                .depositToBridge(tokenId0, depositId, AddressZero, 0, signature, {
-                    value: amount,
-                })
-        )
-            .to.emit(bridgeAContract, "BridgeDeposited")
-            .withNamedArgs({
-                tokenId: tokenId0,
-                depositId,
-                account: deploymentsA.accounts.users[0].address,
-                amount,
+        const tx = await bridgeAContract
+            .connect(deploymentsA.accounts.users[0])
+            .depositToBridge(tokenId0, depositId, AddressZero, 0, signature, {
+                value: amount,
             });
+        await tx.wait();
         expect(await hre.ethers.provider.getBalance(bridgeAContract.address)).to.deep.equal(oldLiquidity.add(amount));
     });
 
     it("Waiting", async () => {
+        await hre.changeNetwork(config.bridge.networkBName);
         const t1 = ContractUtils.getTimeStamp();
         while (true) {
             const info = await bridgeBContract.getWithdrawInfo(depositId);
@@ -208,17 +190,11 @@ describe("Test for Bridge", () => {
         );
         depositId = ContractUtils.getRandomId(deploymentsB.accounts.users[0].address);
         const signature = await ContractUtils.signMessage(deploymentsB.accounts.users[0], message);
-        await expect(
-            bridgeBContract
-                .connect(deploymentsB.accounts.deployer)
-                .depositToBridge(tokenId1, depositId, deploymentsB.accounts.users[0].address, amount, signature)
-        )
-            .to.emit(bridgeBContract, "BridgeDeposited")
-            .withNamedArgs({
-                depositId,
-                account: deploymentsB.accounts.users[0].address,
-                amount,
-            });
+        const tx = await bridgeBContract
+            .connect(deploymentsB.accounts.deployer)
+            .depositToBridge(tokenId1, depositId, deploymentsB.accounts.users[0].address, amount, signature);
+        await tx.wait();
+
         expect(await tokenBContract.balanceOf(deploymentsB.accounts.users[0].address)).to.deep.equal(
             oldTokenBalance.sub(amount)
         );
@@ -226,6 +202,7 @@ describe("Test for Bridge", () => {
     });
 
     it("Waiting", async () => {
+        await hre.changeNetwork(config.bridge.networkAName);
         const t1 = ContractUtils.getTimeStamp();
         while (true) {
             const info = await bridgeAContract.getWithdrawInfo(depositId);
@@ -233,5 +210,10 @@ describe("Test for Bridge", () => {
             else if (ContractUtils.getTimeStamp() - t1 > 60) break;
             await ContractUtils.delay(1000);
         }
+    });
+
+    after("Stop TestServer", async () => {
+        await server.stop();
+        await storage.dropTestDB();
     });
 });

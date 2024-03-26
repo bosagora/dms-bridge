@@ -1,0 +1,12 @@
+[Eth]
+NetworkId = 215192
+
+[Node]
+HTTPHost = "0.0.0.0"
+HTTPPort = 8542
+HTTPVirtualHosts = ["*"]
+HTTPModules = ["eth", "net", "web3", "txpool"]
+
+[Node.P2P]
+BootstrapNodes = []
+StaticNodes = []

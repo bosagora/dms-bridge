@@ -8,8 +8,10 @@ import { ResponseMessage } from "../utils/Errors";
 import { Wallet } from "ethers";
 import * as hre from "hardhat";
 
-import { NonceManager } from "@ethersproject/experimental";
 import { ContractUtils } from "../utils/ContractUtils";
+
+import { NonceManager } from "@ethersproject/experimental";
+import { Provider } from "@ethersproject/providers";
 
 export class Executor {
     private storage: ValidatorStorage;
@@ -19,6 +21,7 @@ export class Executor {
     private readonly sourceNetwork: string;
     private readonly targetNetwork: string;
     private readonly targetContractAddress: string;
+    private targetProvider: Provider | undefined;
 
     constructor(
         storage: ValidatorStorage,
@@ -39,6 +42,11 @@ export class Executor {
     }
 
     public async work() {
+        if (this.targetProvider === undefined) {
+            await hre.changeNetwork(this.targetNetwork);
+            this.targetProvider = hre.ethers.provider;
+        }
+
         const events = await this.storage.getNotExecutedEvents(
             this.wallet.address,
             this.sourceType,
@@ -46,13 +54,12 @@ export class Executor {
         );
         if (events.length === 0) return;
 
-        await hre.changeNetwork(this.targetNetwork);
-        const signer = new NonceManager(new GasPriceManager(this.wallet.connect(hre.ethers.provider)));
+        const signer = new NonceManager(new GasPriceManager(this.wallet.connect(this.targetProvider)));
 
         const contract = new hre.ethers.Contract(
             this.targetContractAddress,
             IBridge__factory.createInterface(),
-            hre.ethers.provider
+            this.targetProvider
         ) as IBridge;
 
         for (const event of events) {

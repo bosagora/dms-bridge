@@ -36,10 +36,13 @@ interface IShopData {
 }
 
 describe("Test for EventCollector", () => {
-    const deployments = new Deployments();
+    const config = new Config();
+    config.readFromFile(path.resolve(process.cwd(), "config", "config_test.yaml"));
+    config.bridge.networkAName = "hardhat";
+    config.bridge.networkBName = "hardhat";
+    const deploymentsA = new Deployments(config, config.bridge.networkAName);
     let tokenContract: BIP20DelegatedTransfer;
     let bridgeContract: Bridge;
-    let config: Config;
     let storage: ValidatorStorage;
 
     const amount = Amount.make(100_000, 18).value;
@@ -49,14 +52,12 @@ describe("Test for EventCollector", () => {
     let validatorWallet: Wallet;
 
     const deployAllContract = async (shopData: IShopData[]) => {
-        await deployments.doDeployAll();
-        tokenContract = deployments.getContract("TestKIOS") as BIP20DelegatedTransfer;
-        bridgeContract = deployments.getContract("Bridge") as Bridge;
+        await deploymentsA.doDeployAll();
+        tokenContract = deploymentsA.getContract("TestKIOS") as BIP20DelegatedTransfer;
+        bridgeContract = deploymentsA.getContract("Bridge") as Bridge;
     };
 
     before("Create Config", async () => {
-        config = new Config();
-        config.readFromFile(path.resolve(process.cwd(), "config", "config_test.yaml"));
         validatorWallet = new Wallet(config.bridge.validators[0]);
         storage = await ValidatorStorage.make(config.database);
         await storage.clearTestDB();
@@ -77,7 +78,7 @@ describe("Test for EventCollector", () => {
         collector = new EventCollector(
             storage,
             ValidatorType.A,
-            "hardhat",
+            config.bridge.networkAName,
             bridgeContract.address,
             1n,
             validatorWallet
@@ -86,53 +87,63 @@ describe("Test for EventCollector", () => {
 
     it("EventCollector.work()", async () => {
         await collector.work();
-        const events = await storage.getEvents(validatorWallet.address, ValidatorType.A, "hardhat", 0n);
+        const events = await storage.getEvents(
+            validatorWallet.address,
+            ValidatorType.A,
+            config.bridge.networkAName,
+            0n
+        );
         assert.deepStrictEqual(events.length, 0);
     });
 
     it("Register token", async () => {
+        await hre.changeNetwork(config.bridge.networkAName);
         // Native Token
         tokenId0 = HashZero;
-        await bridgeContract.connect(deployments.accounts.deployer).registerToken(HashZero, AddressZero);
+        await bridgeContract.connect(deploymentsA.accounts.deployer).registerToken(HashZero, AddressZero);
         // BIP20 Token
         tokenId1 = ContractUtils.getTokenId(await tokenContract.name(), await tokenContract.symbol());
-        await bridgeContract.connect(deployments.accounts.deployer).registerToken(tokenId1, tokenContract.address);
+        await bridgeContract.connect(deploymentsA.accounts.deployer).registerToken(tokenId1, tokenContract.address);
     });
 
     it("Deposit Native Liquidity", async () => {
+        await hre.changeNetwork(config.bridge.networkAName);
         const liquidityAmount = Amount.make(1_000_000_000, 18).value;
-        const signature = await ContractUtils.signMessage(deployments.accounts.deployer, arrayify(HashZero));
+        const signature = await ContractUtils.signMessage(deploymentsA.accounts.deployer, arrayify(HashZero));
         const tx1 = await bridgeContract
-            .connect(deployments.accounts.deployer)
+            .connect(deploymentsA.accounts.deployer)
             .depositLiquidity(tokenId0, liquidityAmount, signature, { value: liquidityAmount });
         await tx1.wait();
     });
 
     it("Deposit BIP20 Liquidity", async () => {
+        await hre.changeNetwork(config.bridge.networkAName);
         const liquidityAmount = Amount.make(1_000_000_000, 18).value;
-        const nonce = await (deployments.getContract("TestKIOS") as BIP20DelegatedTransfer).nonceOf(
-            deployments.accounts.deployer.address
+        const nonce = await (deploymentsA.getContract("TestKIOS") as BIP20DelegatedTransfer).nonceOf(
+            deploymentsA.accounts.deployer.address
         );
         const message = ContractUtils.getTransferMessage(
-            deployments.accounts.deployer.address,
+            deploymentsA.accounts.deployer.address,
             bridgeContract.address,
             liquidityAmount,
-            nonce
+            nonce,
+            hre.getChainId(config.bridge.networkAName)
         );
-        const signature = await ContractUtils.signMessage(deployments.accounts.deployer, message);
+        const signature = await ContractUtils.signMessage(deploymentsA.accounts.deployer, message);
         const tx1 = await bridgeContract
-            .connect(deployments.accounts.deployer)
+            .connect(deploymentsA.accounts.deployer)
             .depositLiquidity(tokenId1, liquidityAmount, signature);
         await tx1.wait();
     });
 
     it("Deposit native token to Main Bridge", async () => {
+        await hre.changeNetwork(config.bridge.networkAName);
         const oldLiquidity = await hre.ethers.provider.getBalance(bridgeContract.address);
-        depositId = ContractUtils.getRandomId(deployments.accounts.users[0].address);
-        const signature = await ContractUtils.signMessage(deployments.accounts.users[0], arrayify(HashZero));
+        depositId = ContractUtils.getRandomId(deploymentsA.accounts.users[0].address);
+        const signature = await ContractUtils.signMessage(deploymentsA.accounts.users[0], arrayify(HashZero));
         await expect(
             bridgeContract
-                .connect(deployments.accounts.users[0])
+                .connect(deploymentsA.accounts.users[0])
                 .depositToBridge(tokenId0, depositId, AddressZero, 0, signature, {
                     value: amount,
                 })
@@ -141,7 +152,7 @@ describe("Test for EventCollector", () => {
             .withNamedArgs({
                 tokenId: tokenId0,
                 depositId,
-                account: deployments.accounts.users[0].address,
+                account: deploymentsA.accounts.users[0].address,
                 amount,
             });
         expect(await hre.ethers.provider.getBalance(bridgeContract.address)).to.deep.equal(oldLiquidity.add(amount));
@@ -149,39 +160,46 @@ describe("Test for EventCollector", () => {
 
     it("EventCollector.work()", async () => {
         await collector.work();
-        const events = await storage.getEvents(validatorWallet.address, ValidatorType.A, "hardhat", 0n);
+        const events = await storage.getEvents(
+            validatorWallet.address,
+            ValidatorType.A,
+            config.bridge.networkAName,
+            0n
+        );
         assert.deepStrictEqual(events.length, 1);
-        assert.deepStrictEqual(events[0].network, "hardhat");
+        assert.deepStrictEqual(events[0].network, config.bridge.networkAName);
         assert.deepStrictEqual(events[0].tokenId, tokenId0);
         assert.deepStrictEqual(events[0].depositId, depositId);
-        assert.deepStrictEqual(events[0].account, deployments.accounts.users[0].address);
+        assert.deepStrictEqual(events[0].account, deploymentsA.accounts.users[0].address);
         assert.deepStrictEqual(events[0].amount, amount);
     });
 
     it("Deposit BIB20 token to Main Bridge", async () => {
+        await hre.changeNetwork(config.bridge.networkAName);
         const oldLiquidity = await tokenContract.balanceOf(bridgeContract.address);
-        const oldTokenBalance = await tokenContract.balanceOf(deployments.accounts.users[0].address);
-        const nonce = await tokenContract.nonceOf(deployments.accounts.users[0].address);
+        const oldTokenBalance = await tokenContract.balanceOf(deploymentsA.accounts.users[0].address);
+        const nonce = await tokenContract.nonceOf(deploymentsA.accounts.users[0].address);
         const message = ContractUtils.getTransferMessage(
-            deployments.accounts.users[0].address,
+            deploymentsA.accounts.users[0].address,
             bridgeContract.address,
             amount,
-            nonce
+            nonce,
+            hre.getChainId(config.bridge.networkAName)
         );
-        depositId = ContractUtils.getRandomId(deployments.accounts.users[0].address);
-        const signature = await ContractUtils.signMessage(deployments.accounts.users[0], message);
+        depositId = ContractUtils.getRandomId(deploymentsA.accounts.users[0].address);
+        const signature = await ContractUtils.signMessage(deploymentsA.accounts.users[0], message);
         await expect(
             bridgeContract
-                .connect(deployments.accounts.deployer)
-                .depositToBridge(tokenId1, depositId, deployments.accounts.users[0].address, amount, signature)
+                .connect(deploymentsA.accounts.deployer)
+                .depositToBridge(tokenId1, depositId, deploymentsA.accounts.users[0].address, amount, signature)
         )
             .to.emit(bridgeContract, "BridgeDeposited")
             .withNamedArgs({
                 depositId,
-                account: deployments.accounts.users[0].address,
+                account: deploymentsA.accounts.users[0].address,
                 amount,
             });
-        expect(await tokenContract.balanceOf(deployments.accounts.users[0].address)).to.deep.equal(
+        expect(await tokenContract.balanceOf(deploymentsA.accounts.users[0].address)).to.deep.equal(
             oldTokenBalance.sub(amount)
         );
         expect(await tokenContract.balanceOf(bridgeContract.address)).to.deep.equal(oldLiquidity.add(amount));
@@ -189,12 +207,17 @@ describe("Test for EventCollector", () => {
 
     it("EventCollector.work()", async () => {
         await collector.work();
-        const events = await storage.getEvents(validatorWallet.address, ValidatorType.A, "hardhat", 0n);
+        const events = await storage.getEvents(
+            validatorWallet.address,
+            ValidatorType.A,
+            config.bridge.networkAName,
+            0n
+        );
         assert.deepStrictEqual(events.length, 2);
-        assert.deepStrictEqual(events[1].network, "hardhat");
+        assert.deepStrictEqual(events[1].network, config.bridge.networkAName);
         assert.deepStrictEqual(events[1].tokenId, tokenId1);
         assert.deepStrictEqual(events[1].depositId, depositId);
-        assert.deepStrictEqual(events[1].account, deployments.accounts.users[0].address);
+        assert.deepStrictEqual(events[1].account, deploymentsA.accounts.users[0].address);
         assert.deepStrictEqual(events[1].amount, amount);
     });
 });
