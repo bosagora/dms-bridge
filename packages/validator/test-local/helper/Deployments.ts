@@ -38,7 +38,7 @@ export class Deployments {
         this.network = network;
         this.deployments = new Map<string, IDeployedContract>();
 
-        const raws = HardhatAccount.keys.map((m) => new Wallet(m, ethers.provider));
+        const raws = HardhatAccount.keys.map((m) => new Wallet(m, hre.ethers.provider));
         const [
             deployer,
             fee,

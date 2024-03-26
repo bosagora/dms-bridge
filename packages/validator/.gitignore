@@ -140,3 +140,6 @@ typechain-types
 cache
 artifacts
 
+/**/*/chain1/node/*
+/**/*/chain2/node/*
+.openzeppelin/

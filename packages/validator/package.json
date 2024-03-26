@@ -18,6 +18,7 @@
         "start": "TESTING=false NODE_ENV=production hardhat run src/main.ts --network production_net",
         "formatting:check": "prettier '**/*.{json,sol,ts,js,yaml}' -c",
         "formatting:write": "prettier '**/*.{json,sol,ts,js,yaml}' --write",
+        "test:local": "test-local/start-test.sh",
         "test:01-Collector": "TESTING=true hardhat test test/01-Collector.test.ts",
         "test:02-Bridge": "TESTING=true hardhat test test/02-Bridge.test.ts"
     },
