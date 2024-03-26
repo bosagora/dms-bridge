@@ -61,7 +61,6 @@ export class Validator {
     }
 
     public async work() {
-        // logger.info(`[${this.wallet.address}]: Validator Work`);
         await this.eventCollectorA.work();
         await this.eventCollectorB.work();
         await this.executorA.work();

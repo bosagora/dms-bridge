@@ -52,19 +52,25 @@ export class EventCollector {
         const latestCollectedNumber = await this.storage.getLatestNumber(this.wallet.address, this.type, this.network);
         if (latestCollectedNumber === undefined) {
             from = this.startNumber;
+        } else if (latestCollectedNumber === latestBlockNumber) {
+            return;
         } else {
             from = latestCollectedNumber + 1n;
-            if (from > latestBlockNumber) from = this.startNumber;
+            if (from > latestBlockNumber) {
+                from = this.startNumber;
+                logger.warn(`Reset to collect from the beginning ${Number(from)}`);
+            }
         }
 
+        logger.info(`Collect Logs - ${Number(from)} - ${Number(latestBlockNumber)}`);
         const filters = [this.interfaceOfBridge.getEventTopic("BridgeDeposited")];
-
         const logs = await this.provider.getLogs({
             fromBlock: Number(from),
             toBlock: Number(latestBlockNumber),
             address: this.contractAddress,
             topics: filters,
         });
+        logger.info(`Collected ${logs.length} Logs`);
 
         const iface = this.interfaceOfBridge;
         const depositEvents = logs.map((m: any) => {
