@@ -2,15 +2,15 @@ import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
 import "@openzeppelin/hardhat-upgrades";
 import "@typechain/hardhat";
-import "./hardhat-change-network";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
 import "solidity-docgen";
+import "./hardhat-change-network";
 
 import * as dotenv from "dotenv";
 import { Wallet } from "ethers";
-import { HardhatAccount } from "./src/HardhatAccount";
 import fs from "fs";
+import { HardhatAccount } from "./src/HardhatAccount";
 
 dotenv.config({ path: "env/.env" });
 
@@ -156,6 +156,16 @@ const config = {
         bosagora_devnet: {
             url: "http://localhost:8545",
             chainId: 24680,
+            accounts: getAccounts(),
+        },
+        production_main: {
+            url: process.env.PRODUCTION_MAIN_URL || "",
+            chainId: Number(process.env.PRODUCTION_MAIN_CHAIN_ID || "2151"),
+            accounts: getAccounts(),
+        },
+        production_side: {
+            url: process.env.PRODUCTION_SIDE_URL || "",
+            chainId: Number(process.env.PRODUCTION_SIDE_CHAIN_ID || "215110"),
             accounts: getAccounts(),
         },
         chain1: {
