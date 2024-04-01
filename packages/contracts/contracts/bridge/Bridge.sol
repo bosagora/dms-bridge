@@ -253,6 +253,16 @@ contract Bridge is BridgeStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         tokenInfos[_tokenId].fee = _fee;
     }
 
+    /// @notice 브리지를 위한 전체 유동성 자금을 조회합니다.
+    function getTotalLiquidity(bytes32 _tokenId) external view override returns (uint256) {
+        require(tokenInfos[_tokenId].status == TokenStatus.Registered, "1713");
+        if (tokenInfos[_tokenId].native) {
+            return address(this).balance;
+        } else {
+            return tokenInfos[_tokenId].token.balanceOf(address(this));
+        }
+    }
+
     /// @notice 브리지를 위한 유동성 자금을 예치합니다.
     function depositLiquidity(bytes32 _tokenId, uint256 _amount, bytes calldata _signature) external payable override {
         require(tokenInfos[_tokenId].status == TokenStatus.Registered, "1713");

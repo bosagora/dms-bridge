@@ -65,6 +65,8 @@ describe("Test for Ledger", () => {
             .depositLiquidity(tokenId0, liquidityAmount, signature, { value: liquidityAmount });
         console.log(`Deposit liquidity native token (tx: ${tx1.hash})...`);
         await tx1.wait();
+
+        expect(await bridgeContract.getTotalLiquidity(HashZero)).to.deep.equal(liquidityAmount);
     });
 
     it("Deposit BIP20 Liquidity", async () => {
@@ -84,11 +86,12 @@ describe("Test for Ledger", () => {
             .depositLiquidity(tokenId1, liquidityAmount, signature);
         console.log(`Deposit liquidity token (tx: ${tx1.hash})...`);
         await tx1.wait();
+
+        expect(await bridgeContract.getTotalLiquidity(tokenId1)).to.deep.equal(liquidityAmount);
     });
 
     it("Deposit native token to Main Bridge", async () => {
         const oldLiquidity = await hre.ethers.provider.getBalance(bridgeContract.address);
-        // const oldTokenBalance = await hre.ethers.provider.getBalance(deployments.accounts.users[0].address);
         depositId = ContractUtils.getRandomId(deployments.accounts.users[0].address);
         const signature = await ContractUtils.signMessage(deployments.accounts.users[0], arrayify(HashZero));
         await expect(
@@ -105,9 +108,6 @@ describe("Test for Ledger", () => {
                 account: deployments.accounts.users[0].address,
                 amount,
             });
-        // expect(await hre.ethers.provider.getBalance(deployments.accounts.users[0].address)).to.deep.equal(
-        //     oldTokenBalance.sub(amount)
-        // );
         expect(await hre.ethers.provider.getBalance(bridgeContract.address)).to.deep.equal(oldLiquidity.add(amount));
     });
 
