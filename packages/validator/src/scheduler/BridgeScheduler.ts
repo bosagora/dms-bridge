@@ -1,5 +1,5 @@
 import "@nomiclabs/hardhat-ethers";
-import { BIP20DelegatedTransfer } from "../../typechain-types";
+import { BIP20DelegatedTransfer, IBridge, IBridge__factory } from "../../typechain-types";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
 import { ValidatorStorage } from "../storage/ValidatorStorage";
@@ -22,12 +22,18 @@ export class BridgeScheduler extends Scheduler {
     private _tokenA: BIP20DelegatedTransfer | undefined;
     private _tokenB: BIP20DelegatedTransfer | undefined;
 
+    private _bridgeA: IBridge | undefined;
+    private _bridgeB: IBridge | undefined;
+
+    private _tokenIdA: string | undefined;
+    private _tokenIdB: string | undefined;
+
     private old_time_stamp: number;
     private new_time_stamp: number;
 
     constructor(expression: string) {
         super(expression);
-        this.old_time_stamp = ContractUtils.getTimeStamp();
+        this.old_time_stamp = ContractUtils.getTimeStamp() - 120;
         this.new_time_stamp = ContractUtils.getTimeStamp();
     }
 
@@ -74,55 +80,68 @@ export class BridgeScheduler extends Scheduler {
 
     public async onStart() {
         await hre.changeNetwork(this.config.bridge.networkAName);
+
+        this._bridgeA = new hre.ethers.Contract(
+            this.config.bridge.networkABridgeAddress,
+            IBridge__factory.createInterface(),
+            hre.ethers.provider
+        ) as IBridge;
         const factoryA = await hre.ethers.getContractFactory("BIP20DelegatedTransfer");
         this._tokenA = factoryA.attach(this.config.bridge.networkATokenAddress);
+        this._tokenIdA = ContractUtils.getTokenId(await this._tokenA.name(), await this._tokenA.symbol());
         console.log("Chain A: ", this.config.bridge.networkAName);
-        console.log("       : ", this.config.bridge.networkAContractAddress);
+        console.log("       : ", this.config.bridge.networkABridgeAddress);
         const balanceA1 = new BOACoin(
-            await this._tokenA.provider.getBalance(this.config.bridge.networkAContractAddress)
+            await this._bridgeA.provider.getBalance(this.config.bridge.networkABridgeAddress)
         );
         console.log("BOA    : ", balanceA1.toDisplayString(true, 2));
-        const balanceA2 = new BOACoin(await this._tokenA.balanceOf(this.config.bridge.networkAContractAddress));
+
+        const balanceA2 = new BOACoin(await this._bridgeA.getTotalLiquidity(this._tokenIdA));
         console.log("Token  : ", balanceA2.toDisplayString(true, 2));
 
         await hre.changeNetwork(this.config.bridge.networkBName);
+        this._bridgeB = new hre.ethers.Contract(
+            this.config.bridge.networkBBridgeAddress,
+            IBridge__factory.createInterface(),
+            hre.ethers.provider
+        ) as IBridge;
         const factoryB = await hre.ethers.getContractFactory("BIP20DelegatedTransfer");
         this._tokenB = factoryB.attach(this.config.bridge.networkBTokenAddress);
+        this._tokenIdB = ContractUtils.getTokenId(await this._tokenB.name(), await this._tokenB.symbol());
         console.log("Chain B: ", this.config.bridge.networkBName);
-        console.log("       : ", this.config.bridge.networkBContractAddress);
-        const balanceB1 = new BOACoin(
-            await this._tokenB.provider.getBalance(this.config.bridge.networkBContractAddress)
-        );
+        console.log("       : ", this.config.bridge.networkBBridgeAddress);
+        const balanceB1 = new BOACoin(await this._tokenB.provider.getBalance(this.config.bridge.networkBBridgeAddress));
         console.log("BOA    : ", balanceB1.toDisplayString(true, 2));
-        const balanceB2 = new BOACoin(await this._tokenB.balanceOf(this.config.bridge.networkBContractAddress));
+        const balanceB2 = new BOACoin(await this._bridgeB.getTotalLiquidity(this._tokenIdB));
         console.log("Token  : ", balanceB2.toDisplayString(true, 2));
     }
 
     protected async work() {
         try {
             this.new_time_stamp = ContractUtils.getTimeStamp();
-            const old_source_period = Math.floor(this.old_time_stamp / 2);
-            const new_source_period = Math.floor(this.new_time_stamp / 2);
+            const old_source_period = Math.floor(this.old_time_stamp / 60);
+            const new_source_period = Math.floor(this.new_time_stamp / 60);
             if (old_source_period !== new_source_period) {
-                if (this._tokenA !== undefined && this._tokenB !== undefined) {
-                    const balanceA1 = await this._tokenA.provider.getBalance(
-                        this.config.bridge.networkAContractAddress
-                    );
-                    this.metrics.gaugeLabels("native_tokens", { name: "A" }, balanceA1.div(1_000_000_000).toNumber());
-                    const balanceA2 = await this._tokenA.balanceOf(this.config.bridge.networkAContractAddress);
-                    this.metrics.gaugeLabels("main_tokens", { name: "A" }, balanceA2.div(1_000_000_000).toNumber());
+                if (
+                    this._bridgeA !== undefined &&
+                    this._bridgeB !== undefined &&
+                    this._tokenIdA !== undefined &&
+                    this._tokenIdB !== undefined
+                ) {
+                    const balanceA1 = await this._bridgeA.provider.getBalance(this.config.bridge.networkABridgeAddress);
+                    this.metrics.gaugeLabels("native_token", { chain: "A" }, Number(balanceA1.toString()));
+                    const balanceA2 = await this._bridgeA.getTotalLiquidity(this._tokenIdA);
+                    this.metrics.gaugeLabels("main_token", { chain: "A" }, Number(balanceA2.toString()));
 
-                    const balanceB1 = await this._tokenB.provider.getBalance(
-                        this.config.bridge.networkBContractAddress
-                    );
-                    this.metrics.gaugeLabels("native_tokens", { name: "B" }, balanceB1.div(1_000_000_000).toNumber());
-                    const balanceB2 = await this._tokenB.balanceOf(this.config.bridge.networkBContractAddress);
-                    this.metrics.gaugeLabels("main_tokens", { name: "B" }, balanceB2.div(1_000_000_000).toNumber());
+                    const balanceB1 = await this._bridgeB.provider.getBalance(this.config.bridge.networkBBridgeAddress);
+                    this.metrics.gaugeLabels("native_token", { chain: "B" }, Number(balanceB1.toString()));
+                    const balanceB2 = await this._bridgeB.getTotalLiquidity(this._tokenIdB);
+                    this.metrics.gaugeLabels("main_token", { chain: "B" }, Number(balanceB2.toString()));
                 }
                 this.old_time_stamp = this.new_time_stamp;
             }
         } catch (error) {
-            //
+            console.log(error);
         }
 
         try {

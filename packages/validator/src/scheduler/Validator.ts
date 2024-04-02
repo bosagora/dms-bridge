@@ -25,7 +25,7 @@ export class Validator {
             storage,
             ValidatorType.A,
             config.bridge.networkAName,
-            config.bridge.networkAContractAddress,
+            config.bridge.networkABridgeAddress,
             1n,
             this.wallet
         );
@@ -34,7 +34,7 @@ export class Validator {
             storage,
             ValidatorType.B,
             config.bridge.networkBName,
-            config.bridge.networkBContractAddress,
+            config.bridge.networkBBridgeAddress,
             1n,
             this.wallet
         );
@@ -45,7 +45,7 @@ export class Validator {
             config.bridge.networkAName,
             ValidatorType.B,
             config.bridge.networkBName,
-            config.bridge.networkBContractAddress,
+            config.bridge.networkBBridgeAddress,
             this.wallet
         );
 
@@ -55,7 +55,7 @@ export class Validator {
             config.bridge.networkBName,
             ValidatorType.A,
             config.bridge.networkAName,
-            config.bridge.networkAContractAddress,
+            config.bridge.networkABridgeAddress,
             this.wallet
         );
     }

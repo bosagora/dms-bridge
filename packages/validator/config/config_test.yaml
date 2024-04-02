@@ -38,9 +38,9 @@ scheduler:
           expression: "*/10 * * * * *"
 
 bridge:
-    networkAContractAddress: "0x10Da82287982A7e3E718F9adE892a566F92C1Be2"
+    networkABridgeAddress: "0x10Da82287982A7e3E718F9adE892a566F92C1Be2"
     networkAName: "hardhat"
-    networkBContractAddress: "0x10Da82287982A7e3E718F9adE892a566F92C1Be2"
+    networkBBridgeAddress: "0x10Da82287982A7e3E718F9adE892a566F92C1Be2"
     networkBName: "hardhat"
     validators:
         - "${BRIDGE_VALIDATOR1}"

@@ -20,11 +20,4 @@ services:
       --mine=true
       --miner.etherbase=0xF85B2dbA83A08DEe6E24E4461E0334e7384896F9
       --http.corsdomain="*"
-    networks:
-      - bosagora_network
 
-networks:
-  bosagora_network:
-    driver: bridge
-    external: true
-    internal: true

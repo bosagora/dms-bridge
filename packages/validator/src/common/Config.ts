@@ -224,30 +224,30 @@ export class SchedulerConfig implements ISchedulerConfig {
 
 export class BridgeConfig implements IBridgeConfig {
     public networkAName: string;
-    public networkAContractAddress: string;
+    public networkABridgeAddress: string;
     public networkATokenAddress: string;
     public networkBName: string;
-    public networkBContractAddress: string;
+    public networkBBridgeAddress: string;
     public networkBTokenAddress: string;
     public validators: string[];
 
     constructor() {
         const defaults = BridgeConfig.defaultValue();
         this.networkAName = defaults.networkAName;
-        this.networkAContractAddress = defaults.networkAContractAddress;
+        this.networkABridgeAddress = defaults.networkABridgeAddress;
         this.networkATokenAddress = defaults.networkATokenAddress;
         this.networkBName = defaults.networkBName;
-        this.networkBContractAddress = defaults.networkBContractAddress;
+        this.networkBBridgeAddress = defaults.networkBBridgeAddress;
         this.networkBTokenAddress = defaults.networkBTokenAddress;
         this.validators = defaults.validators;
     }
 
     public readFromObject(config: IBridgeConfig) {
         if (config.networkAName !== undefined) this.networkAName = config.networkAName;
-        if (config.networkAContractAddress !== undefined) this.networkAContractAddress = config.networkAContractAddress;
+        if (config.networkABridgeAddress !== undefined) this.networkABridgeAddress = config.networkABridgeAddress;
         if (config.networkATokenAddress !== undefined) this.networkATokenAddress = config.networkATokenAddress;
         if (config.networkBName !== undefined) this.networkBName = config.networkBName;
-        if (config.networkBContractAddress !== undefined) this.networkBContractAddress = config.networkBContractAddress;
+        if (config.networkBBridgeAddress !== undefined) this.networkBBridgeAddress = config.networkBBridgeAddress;
         if (config.networkBTokenAddress !== undefined) this.networkBTokenAddress = config.networkBTokenAddress;
         if (config.validators !== undefined) this.validators = config.validators;
     }
@@ -258,10 +258,10 @@ export class BridgeConfig implements IBridgeConfig {
     public static defaultValue(): IBridgeConfig {
         return {
             networkAName: "",
-            networkAContractAddress: "",
+            networkABridgeAddress: "",
             networkATokenAddress: "",
             networkBName: "",
-            networkBContractAddress: "",
+            networkBBridgeAddress: "",
             networkBTokenAddress: "",
             validators: [],
         } as unknown as IBridgeConfig;
@@ -302,10 +302,10 @@ export interface ISchedulerConfig {
 
 export interface IBridgeConfig {
     networkAName: string;
-    networkAContractAddress: string;
+    networkABridgeAddress: string;
     networkATokenAddress: string;
     networkBName: string;
-    networkBContractAddress: string;
+    networkBBridgeAddress: string;
     networkBTokenAddress: string;
     validators: string[];
 }

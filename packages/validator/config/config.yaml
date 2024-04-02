@@ -39,10 +39,10 @@ scheduler:
 
 bridge:
     networkAName: "production_main"
-    networkAContractAddress: "0x10Da82287982A7e3E718F9adE892a566F92C1Be2"
+    networkABridgeAddress: "0x10Da82287982A7e3E718F9adE892a566F92C1Be2"
     networkATokenAddress: "0x10Da82287982A7e3E718F9adE892a566F92C1Be2"
     networkBName: "production_side"
-    networkBContractAddress: "0x10Da82287982A7e3E718F9adE892a566F92C1Be2"
+    networkBBridgeAddress: "0x10Da82287982A7e3E718F9adE892a566F92C1Be2"
     networkBTokenAddress: "0x10Da82287982A7e3E718F9adE892a566F92C1Be2"
     validators:
         - "${BRIDGE_VALIDATOR1}"

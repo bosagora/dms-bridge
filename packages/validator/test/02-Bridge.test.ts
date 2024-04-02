@@ -67,9 +67,9 @@ describe("Test for Bridge", () => {
     });
 
     before("Create Config", async () => {
-        config.bridge.networkAContractAddress = bridgeAContract.address;
+        config.bridge.networkABridgeAddress = bridgeAContract.address;
         config.bridge.networkATokenAddress = tokenAContract.address;
-        config.bridge.networkBContractAddress = bridgeBContract.address;
+        config.bridge.networkBBridgeAddress = bridgeBContract.address;
         config.bridge.networkBTokenAddress = tokenBContract.address;
     });
 

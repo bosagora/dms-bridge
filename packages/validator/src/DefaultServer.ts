@@ -34,8 +34,8 @@ export class DefaultServer extends WebService {
         register.clear();
         this.metrics = new Metrics();
         this.metrics.create("gauge", "status", "serve status");
-        this.metrics.createGauge("native_tokens", "native token balance", ["chain"]);
-        this.metrics.createGauge("main_tokens", "main token balance", ["chain"]);
+        this.metrics.createGauge("native_token", "native token balance", ["chain"]);
+        this.metrics.createGauge("main_token", "main token balance", ["chain"]);
 
         this.config = config;
         this.storage = storage;

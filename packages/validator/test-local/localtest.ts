@@ -54,14 +54,16 @@ describe("Test for Bridge", function () {
         await deploymentsA.doDeployAll();
         tokenAContract = deploymentsA.getContract("TestKIOS") as BIP20DelegatedTransfer;
         bridgeAContract = deploymentsA.getContract("Bridge") as Bridge;
-        config.bridge.networkAContractAddress = bridgeAContract.address;
+        config.bridge.networkABridgeAddress = bridgeAContract.address;
+        config.bridge.networkATokenAddress = tokenAContract.address;
 
         await hre.changeNetwork(config.bridge.networkBName);
         deploymentsB = new Deployments(config, config.bridge.networkBName);
         await deploymentsB.doDeployAll();
         tokenBContract = deploymentsB.getContract("TestKIOS") as BIP20DelegatedTransfer;
         bridgeBContract = deploymentsB.getContract("Bridge") as Bridge;
-        config.bridge.networkBContractAddress = bridgeBContract.address;
+        config.bridge.networkBBridgeAddress = bridgeBContract.address;
+        config.bridge.networkBTokenAddress = tokenBContract.address;
     });
 
     it("Create TestServer", async () => {
