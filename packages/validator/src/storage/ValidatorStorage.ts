@@ -135,7 +135,7 @@ export class ValidatorStorage extends Storage {
                                 blockNumber: BigInt(m.blockNumber),
                                 transactionHash: m.transactionHash,
                                 withdrawStatus: m.withdrawStatus,
-                                withdrawTimestamp: m.withdrawTimestamp,
+                                withdrawTimestamp: BigInt(m.withdrawTimestamp),
                             };
                         })
                     );
@@ -170,7 +170,7 @@ export class ValidatorStorage extends Storage {
                                 blockNumber: BigInt(m.blockNumber),
                                 transactionHash: m.transactionHash,
                                 withdrawStatus: m.withdrawStatus,
-                                withdrawTimestamp: m.withdrawTimestamp,
+                                withdrawTimestamp: BigInt(m.withdrawTimestamp),
                             };
                         })
                     );
@@ -205,7 +205,7 @@ export class ValidatorStorage extends Storage {
                                 blockNumber: BigInt(m.blockNumber),
                                 transactionHash: m.transactionHash,
                                 withdrawStatus: m.withdrawStatus,
-                                withdrawTimestamp: m.withdrawTimestamp,
+                                withdrawTimestamp: BigInt(m.withdrawTimestamp),
                             };
                         })
                     );
