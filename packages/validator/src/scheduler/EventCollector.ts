@@ -45,51 +45,59 @@ export class EventCollector {
             this.interfaceOfBridge = IBridge__factory.createInterface();
         }
 
-        const block = await this.provider.getBlock("latest");
-        const latestBlockNumber = BigInt(block.number);
+        try {
+            const block = await this.provider.getBlock("latest");
+            const latestBlockNumber = BigInt(block.number);
 
-        let from: BigInt;
-        const latestCollectedNumber = await this.storage.getLatestNumber(this.wallet.address, this.type, this.network);
-        if (latestCollectedNumber === undefined) {
-            from = this.startNumber;
-        } else if (latestCollectedNumber === latestBlockNumber) {
-            return;
-        } else {
-            from = latestCollectedNumber + 1n;
-            if (from > latestBlockNumber) {
+            let from: BigInt;
+            const latestCollectedNumber = await this.storage.getLatestNumber(
+                this.wallet.address,
+                this.type,
+                this.network
+            );
+            if (latestCollectedNumber === undefined) {
                 from = this.startNumber;
-                logger.warn(`Reset to collect from the beginning ${Number(from)}`);
+            } else if (latestCollectedNumber === latestBlockNumber) {
+                return;
+            } else {
+                from = latestCollectedNumber + 1n;
+                if (from > latestBlockNumber) {
+                    from = this.startNumber;
+                    logger.warn(`Reset to collect from the beginning ${Number(from)}`);
+                }
             }
+
+            logger.info(`Collect Logs - ${Number(from)} - ${Number(latestBlockNumber)}`);
+            const filters = [this.interfaceOfBridge.getEventTopic("BridgeDeposited")];
+            const logs = await this.provider.getLogs({
+                fromBlock: Number(from),
+                toBlock: Number(latestBlockNumber),
+                address: this.contractAddress,
+                topics: filters,
+            });
+            logger.info(`Collected ${logs.length} Logs`);
+
+            const iface = this.interfaceOfBridge;
+            const depositEvents = logs.map((m: any) => {
+                const event = iface.parseLog(m);
+                return {
+                    network: this.network,
+                    tokenId: event.args.tokenId,
+                    depositId: event.args.depositId,
+                    account: event.args.account,
+                    amount: BigNumber.from(event.args.amount),
+                    blockNumber: BigInt(m.blockNumber),
+                    transactionHash: m.transactionHash,
+                    withdrawStatus: WithdrawStatus.None,
+                    withdrawTimestamp: 0n,
+                };
+            });
+
+            if (depositEvents.length > 0) await this.storage.postEvents(depositEvents, this.wallet.address, this.type);
+
+            await this.storage.setLatestNumber(this.wallet.address, this.type, this.network, latestBlockNumber);
+        } catch (error) {
+            logger.error(`Failed Collector: ${error}`);
         }
-
-        logger.info(`Collect Logs - ${Number(from)} - ${Number(latestBlockNumber)}`);
-        const filters = [this.interfaceOfBridge.getEventTopic("BridgeDeposited")];
-        const logs = await this.provider.getLogs({
-            fromBlock: Number(from),
-            toBlock: Number(latestBlockNumber),
-            address: this.contractAddress,
-            topics: filters,
-        });
-        logger.info(`Collected ${logs.length} Logs`);
-
-        const iface = this.interfaceOfBridge;
-        const depositEvents = logs.map((m: any) => {
-            const event = iface.parseLog(m);
-            return {
-                network: this.network,
-                tokenId: event.args.tokenId,
-                depositId: event.args.depositId,
-                account: event.args.account,
-                amount: BigNumber.from(event.args.amount),
-                blockNumber: BigInt(m.blockNumber),
-                transactionHash: m.transactionHash,
-                withdrawStatus: WithdrawStatus.None,
-                withdrawTimestamp: 0n,
-            };
-        });
-
-        if (depositEvents.length > 0) await this.storage.postEvents(depositEvents, this.wallet.address, this.type);
-
-        await this.storage.setLatestNumber(this.wallet.address, this.type, this.network, latestBlockNumber);
     }
 }
