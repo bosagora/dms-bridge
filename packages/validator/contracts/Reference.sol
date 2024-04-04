@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.2;
 
-import "loyalty-tokens/contracts/KIOS.sol";
+import "loyalty-tokens/contracts/LYT.sol";
 
 import "dms-bridge-contracts/contracts/bridge/Bridge.sol";
 import "dms-bridge-contracts/contracts/bridge/BridgeValidator.sol";

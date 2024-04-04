@@ -9,7 +9,7 @@ import { HardhatAccount } from "../../src/HardhatAccount";
 import { Amount, BOACoin } from "../../src/utils/Amount";
 import { ContractUtils } from "../../src/utils/ContractUtils";
 
-import { Bridge, BridgeValidator, TestKIOS } from "../../typechain-types";
+import { Bridge, BridgeValidator, TestLYT } from "../../typechain-types";
 
 interface IShopData {
     shopId: string;
@@ -126,17 +126,17 @@ export class Deployments {
 }
 
 async function deployToken(accounts: IAccount, deployment: Deployments) {
-    const contractName = "TestKIOS";
+    const contractName = "TestLYT";
     console.log(`Deploy ${contractName}...`);
 
-    const factory = await ethers.getContractFactory("TestKIOS");
-    const contract = (await factory.connect(accounts.deployer).deploy(accounts.deployer.address)) as TestKIOS;
+    const factory = await ethers.getContractFactory("TestLYT");
+    const contract = (await factory.connect(accounts.deployer).deploy(accounts.deployer.address)) as TestLYT;
     await contract.deployed();
     await contract.deployTransaction.wait();
 
     const balance = await contract.balanceOf(accounts.deployer.address);
-    console.log(`TestKIOS token's owner: ${accounts.deployer.address}`);
-    console.log(`TestKIOS token's balance of owner: ${new BOACoin(balance).toDisplayString(true, 2)}`);
+    console.log(`TestLYT token's owner: ${accounts.deployer.address}`);
+    console.log(`TestLYT token's balance of owner: ${new BOACoin(balance).toDisplayString(true, 2)}`);
 
     deployment.addContract(contractName, contract.address, contract);
     console.log(`Deployed ${contractName} to ${contract.address}`);
@@ -182,7 +182,7 @@ async function deployBridge(accounts: IAccount, deployment: Deployments) {
     const contractName = "Bridge";
     console.log(`Deploy ${contractName}...`);
 
-    if (deployment.getContract("BridgeValidator") === undefined || deployment.getContract("TestKIOS") === undefined) {
+    if (deployment.getContract("BridgeValidator") === undefined || deployment.getContract("TestLYT") === undefined) {
         console.error("Contract is not deployed!");
         return;
     }

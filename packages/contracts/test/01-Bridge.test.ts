@@ -37,7 +37,7 @@ describe("Test for Ledger", () => {
 
     const deployAllContract = async (shopData: IShopData[]) => {
         await deployments.doDeployAll();
-        tokenContract = deployments.getContract("TestKIOS") as BIP20DelegatedTransfer;
+        tokenContract = deployments.getContract("TestLYT") as BIP20DelegatedTransfer;
         bridgeContract = deployments.getContract("Bridge") as Bridge;
     };
 
@@ -71,7 +71,7 @@ describe("Test for Ledger", () => {
 
     it("Deposit BIP20 Liquidity", async () => {
         const liquidityAmount = Amount.make(1_000_000_000, 18).value;
-        const nonce = await (deployments.getContract("TestKIOS") as BIP20DelegatedTransfer).nonceOf(
+        const nonce = await (deployments.getContract("TestLYT") as BIP20DelegatedTransfer).nonceOf(
             deployments.accounts.deployer.address
         );
         const message = ContractUtils.getTransferMessage(

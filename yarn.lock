@@ -4605,10 +4605,10 @@ loupe@^2.3.6:
   dependencies:
     get-func-name "^2.0.1"
 
-loyalty-tokens@^1.0.5, loyalty-tokens@^1.0.6:
-  version "1.0.6"
-  resolved "https://registry.yarnpkg.com/loyalty-tokens/-/loyalty-tokens-1.0.6.tgz#8d3c4de7b034e4e9648dc924dcf4504d658d1bb0"
-  integrity sha512-t55ypKkfdlMUBbdrGfyHVzAy+l6bAFeziNQA1O/ptIeCMRGy5Z09CvrgXwALC90uGpIWNnN5Y8O9inL6DSRk9w==
+loyalty-tokens@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/loyalty-tokens/-/loyalty-tokens-1.1.0.tgz#466d5afb299699201b241674247dbbbb5087edb5"
+  integrity sha512-AtWw5Jc/rBy76TF9Dqo+LGBzSBC4Qlz7Z0xnKRKqsWUxlG29YjuaJ6uoZhkBNthx2HxbDD7RCDgFdAO9G9aSKA==
 
 lru-cache@^10.0.0:
   version "10.2.0"

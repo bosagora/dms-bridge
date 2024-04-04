@@ -53,7 +53,7 @@ describe("Test for EventCollector", () => {
 
     const deployAllContract = async (shopData: IShopData[]) => {
         await deploymentsA.doDeployAll();
-        tokenContract = deploymentsA.getContract("TestKIOS") as BIP20DelegatedTransfer;
+        tokenContract = deploymentsA.getContract("TestLYT") as BIP20DelegatedTransfer;
         bridgeContract = deploymentsA.getContract("Bridge") as Bridge;
     };
 
@@ -119,7 +119,7 @@ describe("Test for EventCollector", () => {
     it("Deposit BIP20 Liquidity", async () => {
         await hre.changeNetwork(config.bridge.networkAName);
         const liquidityAmount = Amount.make(1_000_000_000, 18).value;
-        const nonce = await (deploymentsA.getContract("TestKIOS") as BIP20DelegatedTransfer).nonceOf(
+        const nonce = await (deploymentsA.getContract("TestLYT") as BIP20DelegatedTransfer).nonceOf(
             deploymentsA.accounts.deployer.address
         );
         const message = ContractUtils.getTransferMessage(

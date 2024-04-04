@@ -52,7 +52,7 @@ describe("Test for Bridge", function () {
         await hre.changeNetwork(config.bridge.networkAName);
         deploymentsA = new Deployments(config, config.bridge.networkAName);
         await deploymentsA.doDeployAll();
-        tokenAContract = deploymentsA.getContract("TestKIOS") as BIP20DelegatedTransfer;
+        tokenAContract = deploymentsA.getContract("TestLYT") as BIP20DelegatedTransfer;
         bridgeAContract = deploymentsA.getContract("Bridge") as Bridge;
         config.bridge.networkABridgeAddress = bridgeAContract.address;
         config.bridge.networkATokenAddress = tokenAContract.address;
@@ -60,7 +60,7 @@ describe("Test for Bridge", function () {
         await hre.changeNetwork(config.bridge.networkBName);
         deploymentsB = new Deployments(config, config.bridge.networkBName);
         await deploymentsB.doDeployAll();
-        tokenBContract = deploymentsB.getContract("TestKIOS") as BIP20DelegatedTransfer;
+        tokenBContract = deploymentsB.getContract("TestLYT") as BIP20DelegatedTransfer;
         bridgeBContract = deploymentsB.getContract("Bridge") as Bridge;
         config.bridge.networkBBridgeAddress = bridgeBContract.address;
         config.bridge.networkBTokenAddress = tokenBContract.address;

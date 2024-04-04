@@ -60,8 +60,8 @@ describe("Test for Bridge", () => {
     before("Deploy", async () => {
         await deploymentsA.doDeployAll();
         await deploymentsB.doDeployAll();
-        tokenAContract = deploymentsA.getContract("TestKIOS") as BIP20DelegatedTransfer;
-        tokenBContract = deploymentsB.getContract("TestKIOS") as BIP20DelegatedTransfer;
+        tokenAContract = deploymentsA.getContract("TestLYT") as BIP20DelegatedTransfer;
+        tokenBContract = deploymentsB.getContract("TestLYT") as BIP20DelegatedTransfer;
         bridgeAContract = deploymentsA.getContract("Bridge") as Bridge;
         bridgeBContract = deploymentsB.getContract("Bridge") as Bridge;
     });
@@ -118,7 +118,7 @@ describe("Test for Bridge", () => {
     before("Deposit BIP20 Liquidity at Bridge A", async () => {
         await hre.changeNetwork(config.bridge.networkAName);
         const liquidityAmount = Amount.make(1_000_000_000, 18).value;
-        const nonce = await (deploymentsA.getContract("TestKIOS") as BIP20DelegatedTransfer).nonceOf(
+        const nonce = await (deploymentsA.getContract("TestLYT") as BIP20DelegatedTransfer).nonceOf(
             deploymentsA.accounts.deployer.address
         );
         const message = ContractUtils.getTransferMessage(
@@ -138,7 +138,7 @@ describe("Test for Bridge", () => {
     before("Deposit BIP20 Liquidity at Bridge B", async () => {
         await hre.changeNetwork(config.bridge.networkBName);
         const liquidityAmount = Amount.make(1_000_000_000, 18).value;
-        const nonce = await (deploymentsB.getContract("TestKIOS") as BIP20DelegatedTransfer).nonceOf(
+        const nonce = await (deploymentsB.getContract("TestLYT") as BIP20DelegatedTransfer).nonceOf(
             deploymentsB.accounts.deployer.address
         );
         const message = ContractUtils.getTransferMessage(
