@@ -28,13 +28,6 @@ import { BridgeScheduler } from "../src/scheduler/BridgeScheduler";
 
 chai.use(solidity);
 
-interface IShopData {
-    shopId: string;
-    name: string;
-    currency: string;
-    wallet: Wallet;
-}
-
 describe("Test for Bridge", () => {
     const config = new Config();
     config.readFromFile(path.resolve(process.cwd(), "config", "config_test.yaml"));

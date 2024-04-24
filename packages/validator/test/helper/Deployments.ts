@@ -1,7 +1,6 @@
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
 import "@openzeppelin/hardhat-upgrades";
-import { ethers, upgrades } from "hardhat";
 
 import { BaseContract, Wallet } from "ethers";
 
@@ -38,7 +37,7 @@ export class Deployments {
         this.network = network;
         this.deployments = new Map<string, IDeployedContract>();
 
-        const raws = HardhatAccount.keys.map((m) => new Wallet(m, ethers.provider));
+        const raws = HardhatAccount.keys.map((m) => new Wallet(m, hre.ethers.provider));
         const [
             deployer,
             fee,
@@ -117,7 +116,7 @@ async function deployToken(accounts: IAccount, deployment: Deployments) {
     console.log(`Deploy ${contractName}...`);
 
     await hre.changeNetwork(deployment.network);
-    const factory = await ethers.getContractFactory("TestLYT");
+    const factory = await hre.ethers.getContractFactory("TestLYT");
     const contract = (await factory.connect(accounts.deployer).deploy(accounts.deployer.address)) as TestLYT;
     await contract.deployed();
     await contract.deployTransaction.wait();
@@ -145,8 +144,8 @@ async function deployBridgeValidator(accounts: IAccount, deployment: Deployments
     console.log(`Deploy ${contractName}...`);
 
     await hre.changeNetwork(deployment.network);
-    const factory = await ethers.getContractFactory("BridgeValidator");
-    const contract = (await upgrades.deployProxy(
+    const factory = await hre.ethers.getContractFactory("BridgeValidator");
+    const contract = (await hre.upgrades.deployProxy(
         factory.connect(accounts.deployer),
         [accounts.bridgeValidators.map((m) => m.address), 3],
         {
@@ -170,8 +169,8 @@ async function deployBridge(accounts: IAccount, deployment: Deployments) {
     }
 
     await hre.changeNetwork(deployment.network);
-    const factory = await ethers.getContractFactory("Bridge");
-    const contract = (await upgrades.deployProxy(
+    const factory = await hre.ethers.getContractFactory("Bridge");
+    const contract = (await hre.upgrades.deployProxy(
         factory.connect(accounts.deployer),
         [await deployment.getContractAddress("BridgeValidator"), accounts.fee.address],
         {
