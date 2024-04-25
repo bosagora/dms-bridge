@@ -16,7 +16,7 @@ export class EventCollector {
     private readonly contractAddress: string;
     private readonly startNumber: bigint;
     private storage: ValidatorStorage;
-    private provider: Provider | undefined;
+    private provider: Provider;
     private interfaceOfBridge: IBridgeInterface | undefined;
 
     constructor(
@@ -25,7 +25,8 @@ export class EventCollector {
         network: string,
         contractAddress: string,
         startBlockNumber: bigint,
-        wallet: Wallet
+        wallet: Wallet,
+        provider: Provider
     ) {
         this.storage = storage;
         this.type = type;
@@ -33,14 +34,10 @@ export class EventCollector {
         this.contractAddress = contractAddress;
         this.startNumber = startBlockNumber;
         this.wallet = wallet;
+        this.provider = provider;
     }
 
     public async work() {
-        if (this.provider === undefined) {
-            await hre.changeNetwork(this.network);
-            this.provider = hre.ethers.provider;
-        }
-
         if (this.interfaceOfBridge === undefined) {
             this.interfaceOfBridge = IBridge__factory.createInterface();
         }

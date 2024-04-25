@@ -21,7 +21,6 @@ export class DefaultServer extends WebService {
 
     public readonly defaultRouter: DefaultRouter;
     public readonly storage: ValidatorStorage;
-    public readonly validators: Validator[];
 
     /**
      * Constructor
@@ -40,7 +39,6 @@ export class DefaultServer extends WebService {
         this.config = config;
         this.storage = storage;
         this.defaultRouter = new DefaultRouter(this, this.metrics);
-        this.validators = this.config.bridge.validators.map((m) => new Validator(this.config, this.storage, m));
 
         if (!schedules) schedules = [];
         schedules.forEach((m) => this.schedules.push(m));
@@ -49,7 +47,6 @@ export class DefaultServer extends WebService {
                 config: this.config,
                 storage: this.storage,
                 metrics: this.metrics,
-                validators: this.validators,
             })
         );
     }

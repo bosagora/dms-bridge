@@ -20,8 +20,8 @@ export class Executor {
     private readonly targetType: ValidatorType;
     private readonly sourceNetwork: string;
     private readonly targetNetwork: string;
-    private readonly targetContractAddress: string;
-    private targetProvider: Provider | undefined;
+    private targetProvider: Provider;
+    private targetBridge: IBridge;
 
     constructor(
         storage: ValidatorStorage,
@@ -29,24 +29,21 @@ export class Executor {
         sourceNetwork: string,
         targetType: ValidatorType,
         targetNetwork: string,
-        targetContractAddress: string,
-        wallet: Wallet
+        wallet: Wallet,
+        targetProvider: Provider,
+        targetBridge: IBridge
     ) {
         this.storage = storage;
         this.sourceType = sourceType;
         this.targetType = targetType;
         this.sourceNetwork = sourceNetwork;
         this.targetNetwork = targetNetwork;
-        this.targetContractAddress = targetContractAddress;
         this.wallet = new Wallet(wallet.privateKey);
+        this.targetProvider = targetProvider;
+        this.targetBridge = targetBridge;
     }
 
     public async work() {
-        if (this.targetProvider === undefined) {
-            await hre.changeNetwork(this.targetNetwork);
-            this.targetProvider = hre.ethers.provider;
-        }
-
         const events = await this.storage.getNotExecutedEvents(
             this.wallet.address,
             this.sourceType,
@@ -56,16 +53,10 @@ export class Executor {
 
         const signer = new NonceManager(new GasPriceManager(this.wallet.connect(this.targetProvider)));
 
-        const contract = new hre.ethers.Contract(
-            this.targetContractAddress,
-            IBridge__factory.createInterface(),
-            this.targetProvider
-        ) as IBridge;
-
         for (const event of events) {
-            const status = await contract.getWithdrawInfo(event.depositId);
+            const status = await this.targetBridge.getWithdrawInfo(event.depositId);
             if (!status.executed) {
-                const confirmed = await contract.isConfirmedOf(event.depositId, this.wallet.address);
+                const confirmed = await this.targetBridge.isConfirmedOf(event.depositId, this.wallet.address);
                 if (!confirmed) {
                     if (
                         event.withdrawStatus < WithdrawStatus.Sent ||
@@ -76,7 +67,7 @@ export class Executor {
                             logger.info(
                                 `[${this.wallet.address}]-[${this.targetNetwork}]: Starting Withdraw [${event.depositId}]`
                             );
-                            const tx = await contract
+                            const tx = await this.targetBridge
                                 .connect(signer)
                                 .withdrawFromBridge(event.tokenId, event.depositId, event.account, event.amount);
 

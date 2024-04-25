@@ -3,8 +3,8 @@ import { ValidatorStorage } from "../storage/ValidatorStorage";
 import { EventCollector } from "./EventCollector";
 
 import { Wallet } from "ethers";
+import { IContractInformation, ValidatorType } from "../types";
 import { Executor } from "./Executor";
-import { ValidatorType } from "../types";
 
 export class Validator {
     private config: Config;
@@ -16,7 +16,7 @@ export class Validator {
     private executorA: Executor;
     private executorB: Executor;
 
-    constructor(config: Config, storage: ValidatorStorage, key: string) {
+    constructor(config: Config, storage: ValidatorStorage, key: string, contractInfo: IContractInformation) {
         this.config = config;
         this.storage = storage;
         this.wallet = new Wallet(key);
@@ -27,7 +27,8 @@ export class Validator {
             config.bridge.networkAName,
             config.bridge.networkABridgeAddress,
             1n,
-            this.wallet
+            this.wallet,
+            contractInfo.providerA
         );
 
         this.eventCollectorB = new EventCollector(
@@ -36,7 +37,8 @@ export class Validator {
             config.bridge.networkBName,
             config.bridge.networkBBridgeAddress,
             1n,
-            this.wallet
+            this.wallet,
+            contractInfo.providerB
         );
 
         this.executorA = new Executor(
@@ -45,8 +47,9 @@ export class Validator {
             config.bridge.networkAName,
             ValidatorType.B,
             config.bridge.networkBName,
-            config.bridge.networkBBridgeAddress,
-            this.wallet
+            this.wallet,
+            contractInfo.providerB,
+            contractInfo.bridgeB
         );
 
         this.executorB = new Executor(
@@ -55,8 +58,9 @@ export class Validator {
             config.bridge.networkBName,
             ValidatorType.A,
             config.bridge.networkAName,
-            config.bridge.networkABridgeAddress,
-            this.wallet
+            this.wallet,
+            contractInfo.providerA,
+            contractInfo.bridgeA
         );
     }
 

@@ -1,4 +1,5 @@
-import { BigNumber } from "ethers";
+import { BigNumber, ethers } from "ethers";
+import { BIP20DelegatedTransfer, IBridge } from "../../typechain-types";
 
 export const SignatureZero =
     "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
@@ -25,4 +26,15 @@ export enum WithdrawStatus {
 export enum ValidatorType {
     A,
     B,
+}
+
+export interface IContractInformation {
+    providerA: ethers.providers.Provider;
+    providerB: ethers.providers.Provider;
+    tokenA: BIP20DelegatedTransfer;
+    tokenB: BIP20DelegatedTransfer;
+    bridgeA: IBridge;
+    bridgeB: IBridge;
+    tokenIdA: string;
+    tokenIdB: string;
 }

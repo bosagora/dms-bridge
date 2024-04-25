@@ -28,6 +28,9 @@ export class BridgeScheduler extends Scheduler {
     private _tokenIdA: string | undefined;
     private _tokenIdB: string | undefined;
 
+    private _providerA: ethers.providers.Provider | undefined;
+    private _providerB: ethers.providers.Provider | undefined;
+
     private old_time_stamp: number;
     private new_time_stamp: number;
 
@@ -73,47 +76,63 @@ export class BridgeScheduler extends Scheduler {
         if (options) {
             if (options.config && options.config instanceof Config) this._config = options.config;
             if (options.storage && options.storage instanceof ValidatorStorage) this._storage = options.storage;
-            if (options.validators) this._validators = options.validators;
             if (options.metrics && options.metrics instanceof Metrics) this._metrics = options.metrics;
         }
     }
 
     public async onStart() {
+        console.log("Chain A : ", this.config.bridge.networkAName);
+        console.log(" Bridge : ", this.config.bridge.networkABridgeAddress);
+        console.log(" Token  : ", this.config.bridge.networkATokenAddress);
+        console.log("Chain B : ", this.config.bridge.networkBName);
+        console.log(" Bridge : ", this.config.bridge.networkBBridgeAddress);
+        console.log(" Token  : ", this.config.bridge.networkBTokenAddress);
+        console.log("");
+
         await hre.changeNetwork(this.config.bridge.networkAName);
+        this._providerA = hre.ethers.provider;
 
         this._bridgeA = new hre.ethers.Contract(
             this.config.bridge.networkABridgeAddress,
             IBridge__factory.createInterface(),
-            hre.ethers.provider
-        ) as IBridge;
+            this._providerA
+        ).connect(this._providerA) as IBridge;
         const factoryA = await hre.ethers.getContractFactory("BIP20DelegatedTransfer");
-        this._tokenA = factoryA.attach(this.config.bridge.networkATokenAddress);
+        this._tokenA = factoryA.attach(this.config.bridge.networkATokenAddress).connect(this._providerA);
         this._tokenIdA = ContractUtils.getTokenId(await this._tokenA.name(), await this._tokenA.symbol());
-        console.log("Chain A: ", this.config.bridge.networkAName);
-        console.log("       : ", this.config.bridge.networkABridgeAddress);
-        const balanceA1 = new BOACoin(
-            await this._bridgeA.provider.getBalance(this.config.bridge.networkABridgeAddress)
-        );
-        console.log("BOA    : ", balanceA1.toDisplayString(true, 2));
-
+        const balanceA1 = new BOACoin(await this._tokenA.provider.getBalance(this.config.bridge.networkABridgeAddress));
+        console.log("Chain A Balance : ");
+        console.log(" BOA    : ", balanceA1.toDisplayString(true, 2));
         const balanceA2 = new BOACoin(await this._bridgeA.getTotalLiquidity(this._tokenIdA));
-        console.log("Token  : ", balanceA2.toDisplayString(true, 2));
+        console.log(" Token  : ", balanceA2.toDisplayString(true, 2));
 
         await hre.changeNetwork(this.config.bridge.networkBName);
+        this._providerB = hre.ethers.provider;
         this._bridgeB = new hre.ethers.Contract(
             this.config.bridge.networkBBridgeAddress,
             IBridge__factory.createInterface(),
-            hre.ethers.provider
-        ) as IBridge;
+            this._providerB
+        ).connect(this._providerB) as IBridge;
         const factoryB = await hre.ethers.getContractFactory("BIP20DelegatedTransfer");
-        this._tokenB = factoryB.attach(this.config.bridge.networkBTokenAddress);
+        this._tokenB = factoryB.attach(this.config.bridge.networkBTokenAddress).connect(this._providerB);
         this._tokenIdB = ContractUtils.getTokenId(await this._tokenB.name(), await this._tokenB.symbol());
-        console.log("Chain B: ", this.config.bridge.networkBName);
-        console.log("       : ", this.config.bridge.networkBBridgeAddress);
         const balanceB1 = new BOACoin(await this._tokenB.provider.getBalance(this.config.bridge.networkBBridgeAddress));
-        console.log("BOA    : ", balanceB1.toDisplayString(true, 2));
+        console.log("Chain B Balance : ");
+        console.log(" BOA    : ", balanceB1.toDisplayString(true, 2));
         const balanceB2 = new BOACoin(await this._bridgeB.getTotalLiquidity(this._tokenIdB));
-        console.log("Token  : ", balanceB2.toDisplayString(true, 2));
+        console.log(" Token  : ", balanceB2.toDisplayString(true, 2));
+
+        const info = {
+            providerA: this._providerA,
+            providerB: this._providerB,
+            tokenA: this._tokenA,
+            tokenB: this._tokenB,
+            bridgeA: this._bridgeA,
+            bridgeB: this._bridgeB,
+            tokenIdA: this._tokenIdA,
+            tokenIdB: this._tokenIdB,
+        };
+        this._validators = this.config.bridge.validators.map((m) => new Validator(this.config, this.storage, m, info));
     }
 
     protected async work() {

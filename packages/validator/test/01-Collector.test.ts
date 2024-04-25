@@ -81,7 +81,8 @@ describe("Test for EventCollector", () => {
             config.bridge.networkAName,
             bridgeContract.address,
             1n,
-            validatorWallet
+            validatorWallet,
+            hre.ethers.provider
         );
     });
 
