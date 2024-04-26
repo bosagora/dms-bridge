@@ -136,6 +136,10 @@ export class BridgeScheduler extends Scheduler {
     }
 
     protected async work() {
+        if (this._validators === undefined) {
+            logger.warn("Validators is not ready yet.");
+            return;
+        }
         try {
             this.new_time_stamp = ContractUtils.getTimeStamp();
             const old_source_period = Math.floor(this.old_time_stamp / 60);
