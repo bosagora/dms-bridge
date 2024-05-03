@@ -1,6 +1,6 @@
 {
     "name": "dms-bridge-contracts",
-    "version": "1.3.0",
+    "version": "1.5.0",
     "description": "Smart Contracts of DMS Bridge",
     "files": [
         "**/*.sol"
