@@ -28,6 +28,7 @@ interface IBridge {
         bytes32 _depositId,
         address _account,
         uint256 _amount,
+        uint256 _expiry,
         bytes calldata _signature
     ) external payable;
 

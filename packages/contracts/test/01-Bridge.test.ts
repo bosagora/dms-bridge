@@ -62,7 +62,7 @@ describe("Test for Ledger", () => {
         const signature = await ContractUtils.signMessage(deployments.accounts.deployer, arrayify(HashZero));
         const tx1 = await bridgeContract
             .connect(deployments.accounts.deployer)
-            .depositLiquidity(tokenId0, liquidityAmount, signature, { value: liquidityAmount });
+            .depositLiquidity(tokenId0, liquidityAmount, 0, signature, { value: liquidityAmount });
         console.log(`Deposit liquidity native token (tx: ${tx1.hash})...`);
         await tx1.wait();
 
@@ -71,19 +71,22 @@ describe("Test for Ledger", () => {
 
     it("Deposit BIP20 Liquidity", async () => {
         const liquidityAmount = Amount.make(1_000_000_000, 18).value;
-        const nonce = await (deployments.getContract("TestLYT") as BIP20DelegatedTransfer).nonceOf(
-            deployments.accounts.deployer.address
-        );
+        const token = deployments.getContract("TestLYT") as BIP20DelegatedTransfer;
+        const nonce = await token.nonceOf(deployments.accounts.deployer.address);
+        const expiry = ContractUtils.getTimeStamp() + 12 * 5;
         const message = ContractUtils.getTransferMessage(
+            hre.ethers.provider.network.chainId,
+            token.address,
             deployments.accounts.deployer.address,
             bridgeContract.address,
             liquidityAmount,
-            nonce
+            nonce,
+            expiry
         );
         const signature = await ContractUtils.signMessage(deployments.accounts.deployer, message);
         const tx1 = await bridgeContract
             .connect(deployments.accounts.deployer)
-            .depositLiquidity(tokenId1, liquidityAmount, signature);
+            .depositLiquidity(tokenId1, liquidityAmount, expiry, signature);
         console.log(`Deposit liquidity token (tx: ${tx1.hash})...`);
         await tx1.wait();
 
@@ -97,7 +100,7 @@ describe("Test for Ledger", () => {
         await expect(
             bridgeContract
                 .connect(deployments.accounts.users[0])
-                .depositToBridge(tokenId0, depositId, AddressZero, 0, signature, {
+                .depositToBridge(tokenId0, depositId, AddressZero, 0, 0, signature, {
                     value: amount,
                 })
         )
@@ -145,18 +148,22 @@ describe("Test for Ledger", () => {
         const oldLiquidity = await tokenContract.balanceOf(bridgeContract.address);
         const oldTokenBalance = await tokenContract.balanceOf(deployments.accounts.users[0].address);
         const nonce = await tokenContract.nonceOf(deployments.accounts.users[0].address);
+        const expiry = ContractUtils.getTimeStamp() + 12 * 5;
         const message = ContractUtils.getTransferMessage(
+            hre.ethers.provider.network.chainId,
+            tokenContract.address,
             deployments.accounts.users[0].address,
             bridgeContract.address,
             amount,
-            nonce
+            nonce,
+            expiry
         );
         depositId = ContractUtils.getRandomId(deployments.accounts.users[0].address);
         const signature = await ContractUtils.signMessage(deployments.accounts.users[0], message);
         await expect(
             bridgeContract
                 .connect(deployments.accounts.deployer)
-                .depositToBridge(tokenId1, depositId, deployments.accounts.users[0].address, amount, signature)
+                .depositToBridge(tokenId1, depositId, deployments.accounts.users[0].address, amount, expiry, signature)
         )
             .to.emit(bridgeContract, "BridgeDeposited")
             .withNamedArgs({

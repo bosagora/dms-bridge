@@ -6,7 +6,12 @@ interface IBridgeLiquidity {
     event DepositedLiquidity(bytes32 tokenId, address account, uint256 amount, uint256 liquidity);
     event WithdrawnLiquidity(bytes32 tokenId, address account, uint256 amount, uint256 liquidity);
 
-    function depositLiquidity(bytes32 _tokenId, uint256 _amount, bytes calldata _signature) external payable;
+    function depositLiquidity(
+        bytes32 _tokenId,
+        uint256 _amount,
+        uint256 _expiry,
+        bytes calldata _signature
+    ) external payable;
 
     function withdrawLiquidity(bytes32 _tokenId, uint256 _amount) external;
 

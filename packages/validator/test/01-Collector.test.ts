@@ -113,27 +113,29 @@ describe("Test for EventCollector", () => {
         const signature = await ContractUtils.signMessage(deploymentsA.accounts.deployer, arrayify(HashZero));
         const tx1 = await bridgeContract
             .connect(deploymentsA.accounts.deployer)
-            .depositLiquidity(tokenId0, liquidityAmount, signature, { value: liquidityAmount });
+            .depositLiquidity(tokenId0, liquidityAmount, 0, signature, { value: liquidityAmount });
         await tx1.wait();
     });
 
     it("Deposit BIP20 Liquidity", async () => {
         await hre.changeNetwork(config.bridge.networkAName);
         const liquidityAmount = Amount.make(1_000_000_000, 18).value;
-        const nonce = await (deploymentsA.getContract("TestLYT") as BIP20DelegatedTransfer).nonceOf(
-            deploymentsA.accounts.deployer.address
-        );
+        const token = deploymentsA.getContract("TestLYT") as BIP20DelegatedTransfer;
+        const nonce = await token.nonceOf(deploymentsA.accounts.deployer.address);
+        const expiry = ContractUtils.getTimeStamp() + 60;
         const message = ContractUtils.getTransferMessage(
+            hre.getChainId(config.bridge.networkAName),
+            token.address,
             deploymentsA.accounts.deployer.address,
             bridgeContract.address,
             liquidityAmount,
             nonce,
-            hre.getChainId(config.bridge.networkAName)
+            expiry
         );
         const signature = await ContractUtils.signMessage(deploymentsA.accounts.deployer, message);
         const tx1 = await bridgeContract
             .connect(deploymentsA.accounts.deployer)
-            .depositLiquidity(tokenId1, liquidityAmount, signature);
+            .depositLiquidity(tokenId1, liquidityAmount, expiry, signature);
         await tx1.wait();
     });
 
@@ -145,7 +147,7 @@ describe("Test for EventCollector", () => {
         await expect(
             bridgeContract
                 .connect(deploymentsA.accounts.users[0])
-                .depositToBridge(tokenId0, depositId, AddressZero, 0, signature, {
+                .depositToBridge(tokenId0, depositId, AddressZero, 0, 0, signature, {
                     value: amount,
                 })
         )
@@ -180,19 +182,22 @@ describe("Test for EventCollector", () => {
         const oldLiquidity = await tokenContract.balanceOf(bridgeContract.address);
         const oldTokenBalance = await tokenContract.balanceOf(deploymentsA.accounts.users[0].address);
         const nonce = await tokenContract.nonceOf(deploymentsA.accounts.users[0].address);
+        const expiry = ContractUtils.getTimeStamp() + 60;
         const message = ContractUtils.getTransferMessage(
+            hre.getChainId(config.bridge.networkAName),
+            tokenContract.address,
             deploymentsA.accounts.users[0].address,
             bridgeContract.address,
             amount,
             nonce,
-            hre.getChainId(config.bridge.networkAName)
+            expiry
         );
         depositId = ContractUtils.getRandomId(deploymentsA.accounts.users[0].address);
         const signature = await ContractUtils.signMessage(deploymentsA.accounts.users[0], message);
         await expect(
             bridgeContract
                 .connect(deploymentsA.accounts.deployer)
-                .depositToBridge(tokenId1, depositId, deploymentsA.accounts.users[0].address, amount, signature)
+                .depositToBridge(tokenId1, depositId, deploymentsA.accounts.users[0].address, amount, expiry, signature)
         )
             .to.emit(bridgeContract, "BridgeDeposited")
             .withNamedArgs({
