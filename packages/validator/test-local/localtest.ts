@@ -99,7 +99,7 @@ describe("Test for Bridge", function () {
         const signature = await ContractUtils.signMessage(deploymentsA.accounts.deployer, arrayify(HashZero));
         const tx1 = await bridgeAContract
             .connect(deploymentsA.accounts.deployer)
-            .depositLiquidity(tokenId0, liquidityAmount, signature, { value: liquidityAmount });
+            .depositLiquidity(tokenId0, liquidityAmount, 0, signature, { value: liquidityAmount });
         await tx1.wait();
     });
 
@@ -109,7 +109,7 @@ describe("Test for Bridge", function () {
         const signature = await ContractUtils.signMessage(deploymentsB.accounts.deployer, arrayify(HashZero));
         const tx1 = await bridgeBContract
             .connect(deploymentsB.accounts.deployer)
-            .depositLiquidity(tokenId0, liquidityAmount, signature, { value: liquidityAmount });
+            .depositLiquidity(tokenId0, liquidityAmount, 0, signature, { value: liquidityAmount });
         await tx1.wait();
     });
 
@@ -117,17 +117,20 @@ describe("Test for Bridge", function () {
         await hre.changeNetwork(config.bridge.networkAName);
         const liquidityAmount = Amount.make(1_000_000_000, 18).value;
         const nonce = await tokenAContract.nonceOf(deploymentsA.accounts.deployer.address);
+        const expiry = ContractUtils.getTimeStamp() + 60;
         const message = ContractUtils.getTransferMessage(
+            hre.getChainId(config.bridge.networkAName),
+            tokenAContract.address,
             deploymentsA.accounts.deployer.address,
             bridgeAContract.address,
             liquidityAmount,
             nonce,
-            hre.getChainId(config.bridge.networkAName)
+            expiry
         );
         const signature = await ContractUtils.signMessage(deploymentsA.accounts.deployer, message);
         const tx1 = await bridgeAContract
             .connect(deploymentsA.accounts.deployer)
-            .depositLiquidity(tokenId1, liquidityAmount, signature);
+            .depositLiquidity(tokenId1, liquidityAmount, expiry, signature);
         await tx1.wait();
     });
 
@@ -135,17 +138,20 @@ describe("Test for Bridge", function () {
         await hre.changeNetwork(config.bridge.networkBName);
         const liquidityAmount = Amount.make(1_000_000_000, 18).value;
         const nonce = await tokenBContract.nonceOf(deploymentsB.accounts.deployer.address);
+        const expiry = ContractUtils.getTimeStamp() + 60;
         const message = ContractUtils.getTransferMessage(
+            hre.getChainId(config.bridge.networkBName),
+            tokenBContract.address,
             deploymentsB.accounts.deployer.address,
             bridgeBContract.address,
             liquidityAmount,
             nonce,
-            hre.getChainId(config.bridge.networkBName)
+            expiry
         );
         const signature = await ContractUtils.signMessage(deploymentsB.accounts.deployer, message);
         const tx1 = await bridgeBContract
             .connect(deploymentsB.accounts.deployer)
-            .depositLiquidity(tokenId1, liquidityAmount, signature);
+            .depositLiquidity(tokenId1, liquidityAmount, expiry, signature);
         await tx1.wait();
     });
 
@@ -160,7 +166,7 @@ describe("Test for Bridge", function () {
         const signature = await ContractUtils.signMessage(deploymentsA.accounts.users[0], arrayify(HashZero));
         const tx = await bridgeAContract
             .connect(deploymentsA.accounts.users[0])
-            .depositToBridge(tokenId0, depositId, AddressZero, 0, signature, {
+            .depositToBridge(tokenId0, depositId, AddressZero, 0, 0, signature, {
                 value: amount,
             });
         await tx.wait();
@@ -183,18 +189,21 @@ describe("Test for Bridge", function () {
         const oldLiquidity = await tokenBContract.balanceOf(bridgeBContract.address);
         const oldTokenBalance = await tokenBContract.balanceOf(deploymentsB.accounts.users[0].address);
         const nonce = await tokenBContract.nonceOf(deploymentsB.accounts.users[0].address);
+        const expiry = ContractUtils.getTimeStamp() + 60;
         const message = ContractUtils.getTransferMessage(
+            hre.getChainId(config.bridge.networkBName),
+            tokenBContract.address,
             deploymentsB.accounts.users[0].address,
             bridgeBContract.address,
             amount,
             nonce,
-            hre.getChainId(config.bridge.networkBName)
+            expiry
         );
         depositId = ContractUtils.getRandomId(deploymentsB.accounts.users[0].address);
         const signature = await ContractUtils.signMessage(deploymentsB.accounts.users[0], message);
         const tx = await bridgeBContract
             .connect(deploymentsB.accounts.deployer)
-            .depositToBridge(tokenId1, depositId, deploymentsB.accounts.users[0].address, amount, signature);
+            .depositToBridge(tokenId1, depositId, deploymentsB.accounts.users[0].address, amount, expiry, signature);
         await tx.wait();
 
         expect(await tokenBContract.balanceOf(deploymentsB.accounts.users[0].address)).to.deep.equal(

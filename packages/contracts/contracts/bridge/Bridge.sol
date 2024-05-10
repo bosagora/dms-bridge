@@ -98,6 +98,7 @@ contract Bridge is BridgeStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         bytes32 _depositId,
         address _account,
         uint256 _amount,
+        uint256 _expiry,
         bytes calldata _signature
     ) external payable override notExistDeposit(_depositId) {
         require(tokenInfos[_tokenId].status == TokenStatus.Registered, "1713");
@@ -111,7 +112,7 @@ contract Bridge is BridgeStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
             require(_amount > tokenInfos[_tokenId].fee * 2, "1031");
 
             BIP20DelegatedTransfer token = tokenInfos[_tokenId].token;
-            if (token.delegatedTransfer(_account, address(this), _amount, _signature)) {
+            if (token.delegatedTransfer(_account, address(this), _amount, _expiry, _signature)) {
                 DepositData memory data = DepositData({ tokenId: _tokenId, account: _account, amount: _amount });
                 deposits[_depositId] = data;
                 emit BridgeDeposited(_tokenId, _depositId, data.account, data.amount, 0);
@@ -264,7 +265,12 @@ contract Bridge is BridgeStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
     }
 
     /// @notice 브리지를 위한 유동성 자금을 예치합니다.
-    function depositLiquidity(bytes32 _tokenId, uint256 _amount, bytes calldata _signature) external payable override {
+    function depositLiquidity(
+        bytes32 _tokenId,
+        uint256 _amount,
+        uint256 _expiry,
+        bytes calldata _signature
+    ) external payable override {
         require(tokenInfos[_tokenId].status == TokenStatus.Registered, "1713");
 
         if (tokenInfos[_tokenId].native) {
@@ -277,7 +283,7 @@ contract Bridge is BridgeStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
             require(token.balanceOf(_msgSender()) >= _amount, "1511");
             require(_amount % 1 gwei == 0, "1030");
 
-            if (token.delegatedTransfer(_msgSender(), address(this), _amount, _signature)) {
+            if (token.delegatedTransfer(_msgSender(), address(this), _amount, _expiry, _signature)) {
                 liquidity[_tokenId][_msgSender()] += _amount;
                 emit DepositedLiquidity(_tokenId, _msgSender(), _amount, liquidity[_tokenId][_msgSender()]);
             }

@@ -1,6 +1,6 @@
 {
-    "name": "bridge-validator",
-    "version": "1.0.0",
+    "name": "bridge-validator-v2",
+    "version": "2.0.0",
     "description": "Bridge validator the decentralized loyalty point system",
     "main": "src/main.js",
     "directories": {
@@ -27,7 +27,7 @@
         "url": "https://github.com/bosagora/dms-bridge/issues"
     },
     "homepage": "https://github.com/bosagora/dms-bridge#readme",
-    "devDependencies": {
+    "dependencies": {
         "@ethersproject/abi": "^5.7.0",
         "@ethersproject/abstract-signer": "^5.7.0",
         "@ethersproject/bignumber": "^5.7.0",
@@ -59,9 +59,7 @@
         "@types/node": "^12.20.43",
         "@types/node-cron": "^3.0.1",
         "@types/pg": "^8.10.7",
-        "@types/urijs": "^1.19.12"
-    },
-    "dependencies": {
+        "@types/urijs": "^1.19.12",
         "argparse": "^2.0.1",
         "assert": "^2.0.0",
         "axios": "^1.6.7",
@@ -69,7 +67,7 @@
         "chai": "^4.3.7",
         "chai-http": "^4.3.7",
         "cors": "^2.8.5",
-        "dms-bridge-contracts": "^1.5.0",
+        "dms-bridge-contracts-v2": "~2.0.0",
         "dom-parser": "^1.1.5",
         "dotenv": "^10.0.0",
         "ethereum-waffle": "^4.0.10",
@@ -82,8 +80,8 @@
         "hardhat": "^2.12.7",
         "hardhat-gas-reporter": "^1.0.7",
         "ip": "^1.1.5",
-        "loyalty-tokens": "^1.1.0",
-        "multisig-wallet-contracts": "^1.1.0",
+        "loyalty-tokens": "~2.0.0",
+        "multisig-wallet-contracts": "~2.0.0",
         "mybatis-mapper": "^0.7.1",
         "node-cron": "^3.0.0",
         "pg": "^8.11.3",

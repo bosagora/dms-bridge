@@ -1,6 +1,6 @@
 {
-    "name": "dms-bridge-contracts-lib",
-    "version": "1.5.0",
+    "name": "dms-bridge-contracts-lib-v2",
+    "version": "2.0.0",
     "description": "",
     "main": "dist/bundle-cjs.js",
     "module": "dist/bundle-esm.js",
