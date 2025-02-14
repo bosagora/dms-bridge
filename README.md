@@ -1,4 +1,4 @@
-# ACC Bridge
+# KIOS Bridge
 
 ## Install NodeJS
 
@@ -13,8 +13,9 @@ npm install -g yarn
 ## Install Project
 
 ```shell
-git clone https://github.com/acc-coin/acc-bridge.git
-cd acc-bridge
+git clone https://github.com/kios-coin/kios-bridge.git
+cd dms-bridge
+git checkout kios/v2.x.x
 yarn install
 ```
 

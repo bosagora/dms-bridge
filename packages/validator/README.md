@@ -1,1 +1,1 @@
-# acc-bridge-validator
+# kios-bridge-validator
