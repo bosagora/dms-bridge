@@ -36,6 +36,7 @@ export class Deployments {
         const raws = HardhatAccount.keys.map((m) => new Wallet(m, ethers.provider));
         const [
             deployer,
+            owner,
             protocolFee,
             bridgeValidator1,
             bridgeValidator2,

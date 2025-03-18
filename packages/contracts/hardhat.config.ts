@@ -39,6 +39,13 @@ function getAccounts() {
         accounts.push(process.env.DEPLOYER_SIDE_CHAIN);
     }
 
+    if (process.env.OWNER !== undefined && process.env.OWNER.trim() !== "" && reg_bytes64.test(process.env.OWNER)) {
+        accounts.push(process.env.OWNER);
+    } else {
+        process.env.OWNER = Wallet.createRandom().privateKey;
+        accounts.push(process.env.OWNER);
+    }
+
     if (
         process.env.PROTOCOL_FEE !== undefined &&
         process.env.PROTOCOL_FEE.trim() !== "" &&
@@ -48,39 +55,6 @@ function getAccounts() {
     } else {
         process.env.PROTOCOL_FEE = Wallet.createRandom().privateKey;
         accounts.push(process.env.PROTOCOL_FEE);
-    }
-
-    if (
-        process.env.LINK_VALIDATOR1 !== undefined &&
-        process.env.LINK_VALIDATOR1.trim() !== "" &&
-        reg_bytes64.test(process.env.LINK_VALIDATOR1)
-    ) {
-        accounts.push(process.env.LINK_VALIDATOR1);
-    } else {
-        process.env.LINK_VALIDATOR1 = Wallet.createRandom().privateKey;
-        accounts.push(process.env.LINK_VALIDATOR1);
-    }
-
-    if (
-        process.env.LINK_VALIDATOR2 !== undefined &&
-        process.env.LINK_VALIDATOR2.trim() !== "" &&
-        reg_bytes64.test(process.env.LINK_VALIDATOR2)
-    ) {
-        accounts.push(process.env.LINK_VALIDATOR2);
-    } else {
-        process.env.LINK_VALIDATOR2 = Wallet.createRandom().privateKey;
-        accounts.push(process.env.LINK_VALIDATOR2);
-    }
-
-    if (
-        process.env.LINK_VALIDATOR3 !== undefined &&
-        process.env.LINK_VALIDATOR3.trim() !== "" &&
-        reg_bytes64.test(process.env.LINK_VALIDATOR3)
-    ) {
-        accounts.push(process.env.LINK_VALIDATOR3);
-    } else {
-        process.env.LINK_VALIDATOR3 = Wallet.createRandom().privateKey;
-        accounts.push(process.env.LINK_VALIDATOR3);
     }
 
     if (
