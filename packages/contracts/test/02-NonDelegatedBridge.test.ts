@@ -4,8 +4,8 @@ import "@openzeppelin/hardhat-upgrades";
 
 import { Amount } from "../src/utils/Amount";
 import { ContractUtils } from "../src/utils/ContractUtils";
-import { BIP20DelegatedTransfer, Bridge } from "../typechain-types";
-import { Deployments } from "./helper/Deployments";
+import { Bridge, NonDelegatedBridge, TestERC20} from "../typechain-types";
+import { Deployments } from "./helper/NoDelegatedDeployments";
 
 import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
@@ -27,9 +27,9 @@ interface IShopData {
     wallet: Wallet;
 }
 
-describe("Test for Bridge", () => {
+describe("Test for NonDelegatedBridge", () => {
     const deployments = new Deployments();
-    let tokenContract: BIP20DelegatedTransfer;
+    let tokenContract: TestERC20;
     let bridgeContract: Bridge;
 
     const amount = Amount.make(100_000, 18).value;
@@ -37,8 +37,8 @@ describe("Test for Bridge", () => {
 
     const deployAllContract = async (shopData: IShopData[]) => {
         await deployments.doDeployAll();
-        tokenContract = deployments.getContract("TestLYT") as BIP20DelegatedTransfer;
-        bridgeContract = deployments.getContract("Bridge") as Bridge;
+        tokenContract = deployments.getContract("TestERC20") as TestERC20;
+        bridgeContract = deployments.getContract("Bridge") as NonDelegatedBridge;
     };
 
     let tokenId0: string;
@@ -52,7 +52,7 @@ describe("Test for Bridge", () => {
         // Native Token
         tokenId0 = HashZero;
         await bridgeContract.connect(deployments.accounts.deployer).registerToken(HashZero, AddressZero);
-        // BIP20 Token
+        // ERC20 Token
         tokenId1 = ContractUtils.getTokenId(await tokenContract.name(), await tokenContract.symbol());
         await bridgeContract.connect(deployments.accounts.deployer).registerToken(tokenId1, tokenContract.address);
     });
@@ -69,24 +69,12 @@ describe("Test for Bridge", () => {
         expect(await bridgeContract.getTotalLiquidity(HashZero)).to.deep.equal(liquidityAmount);
     });
 
-    it("Deposit BIP20 Liquidity", async () => {
+    it("Deposit ERC20 Liquidity", async () => {
         const liquidityAmount = Amount.make(1_000_000_000, 18).value;
-        const token = deployments.getContract("TestLYT") as BIP20DelegatedTransfer;
-        const nonce = await token.nonceOf(deployments.accounts.deployer.address);
-        const expiry = ContractUtils.getTimeStamp() + 12 * 5;
-        const message = ContractUtils.getTransferMessage(
-            hre.ethers.provider.network.chainId,
-            token.address,
-            deployments.accounts.deployer.address,
-            bridgeContract.address,
-            liquidityAmount,
-            nonce,
-            expiry
-        );
-        const signature = await ContractUtils.signMessage(deployments.accounts.deployer, message);
+        await tokenContract.connect(deployments.accounts.deployer).approve(bridgeContract.address, liquidityAmount);
         const tx1 = await bridgeContract
             .connect(deployments.accounts.deployer)
-            .depositLiquidity(tokenId1, liquidityAmount, expiry, signature);
+            .depositLiquidity(tokenId1, liquidityAmount, 0, HashZero);
         console.log(`Deposit liquidity token (tx: ${tx1.hash})...`);
         await tx1.wait();
 
@@ -144,22 +132,15 @@ describe("Test for Bridge", () => {
         );
     });
 
-    it("Deposit BIB20 token to Main Bridge", async () => {
+    it("Deposit ERC20 token to Main Bridge", async () => {
         const oldLiquidity = await tokenContract.balanceOf(bridgeContract.address);
         const oldTokenBalance = await tokenContract.balanceOf(deployments.accounts.users[0].address);
-        const nonce = await tokenContract.nonceOf(deployments.accounts.users[0].address);
-        const expiry = ContractUtils.getTimeStamp() + 12 * 5;
-        const message = ContractUtils.getTransferMessage(
-            hre.ethers.provider.network.chainId,
-            tokenContract.address,
-            deployments.accounts.users[0].address,
-            bridgeContract.address,
-            amount,
-            nonce,
-            expiry
-        );
+
+        const expiry = ContractUtils.getTimeStamp() + 60;
+        const signature = await ContractUtils.signMessage(deployments.accounts.users[0], arrayify(HashZero));
+
         depositId = ContractUtils.getRandomId(deployments.accounts.users[0].address);
-        const signature = await ContractUtils.signMessage(deployments.accounts.users[0], message);
+        await tokenContract.connect(deployments.accounts.users[0]).approve(bridgeContract.address, amount);
         await expect(
             bridgeContract
                 .connect(deployments.accounts.deployer)
@@ -177,7 +158,7 @@ describe("Test for Bridge", () => {
         expect(await tokenContract.balanceOf(bridgeContract.address)).to.deep.equal(oldLiquidity.add(amount));
     });
 
-    it("Withdraw BIB20 token from Main Bridge", async () => {
+    it("Withdraw ERC20 token from Main Bridge", async () => {
         const oldLiquidity = await tokenContract.balanceOf(bridgeContract.address);
         const oldTokenBalance = await tokenContract.balanceOf(deployments.accounts.users[0].address);
         const oldFeeBalance = await tokenContract.balanceOf(deployments.accounts.protocolFee.address);

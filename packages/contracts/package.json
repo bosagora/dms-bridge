@@ -1,6 +1,6 @@
 {
     "name": "kios-bridge-contracts-v2",
-    "version": "2.5.0",
+    "version": "2.6.0",
     "description": "Bridge smart contracts of for decentralized loyalty systems",
     "files": [
         "**/*.sol"
@@ -14,7 +14,9 @@
         "lint": "tslint --config tslint.json \\\"{src,test}/**/*.ts\\\"",
         "lint-fix": "tslint --fix --config tslint.json \\\"{src,test}/**/*.ts\\\"",
         "formatting:check": "prettier '**/*.{json,sol,ts,js,md}' -c",
-        "formatting:write": "prettier '**/*.{json,sol,ts,js,md}' --write"
+        "formatting:write": "prettier '**/*.{json,sol,ts,js,md}' --write",
+        "test:Bridge": "hardhat test test/01-Bridge.test.ts",
+        "test:NonDelegatedBridge": "hardhat test test/02-NonDelegatedBridge.test.ts"
     },
     "repository": {
         "type": "git",

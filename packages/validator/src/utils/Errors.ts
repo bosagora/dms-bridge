@@ -37,6 +37,7 @@ export class ResponseMessage {
         ["1512", "Not allowed deposit"],
         ["1513", "Insufficient fee or foundation balance"],
         ["1514", "Insufficient liquidity balance"],
+        ["1515", "Not allowed deposit"],
         ["1520", "Loyalty type is not TOKEN"],
         ["1521", "Invalid value entered"],
         ["1530", "The payment ID already exists"],

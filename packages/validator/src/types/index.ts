@@ -1,5 +1,5 @@
 import { BigNumber, ethers } from "ethers";
-import { BIP20DelegatedTransfer, IBridge } from "../../typechain-types";
+import { ERC20, IBridge } from "../../typechain-types";
 
 export const SignatureZero =
     "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
@@ -31,8 +31,8 @@ export enum ValidatorType {
 export interface IContractInformation {
     providerA: ethers.providers.Provider;
     providerB: ethers.providers.Provider;
-    tokenA: BIP20DelegatedTransfer;
-    tokenB: BIP20DelegatedTransfer;
+    tokenA: ERC20;
+    tokenB: ERC20;
     bridgeA: IBridge;
     bridgeB: IBridge;
     tokenIdA: string;

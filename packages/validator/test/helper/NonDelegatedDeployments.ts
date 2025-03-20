@@ -7,7 +7,7 @@ import { BaseContract, Wallet } from "ethers";
 import { Amount, BOACoin } from "../../src/common/Amount";
 import { Config } from "../../src/common/Config";
 import { HardhatAccount } from "../../src/HardhatAccount";
-import { Bridge, BridgeValidator, TestLYT } from "../../typechain-types";
+import { BridgeValidator, NonDelegatedBridge, TestERC20 } from "../../typechain-types";
 
 import * as hre from "hardhat";
 
@@ -105,20 +105,20 @@ export class Deployments {
 }
 
 async function deployToken(accounts: IAccount, deployment: Deployments) {
-    const contractName = "TestLYT";
+    const contractName = "TestERC20";
     console.log(`Deploy ${contractName}...`);
 
     await hre.changeNetwork(deployment.network);
-    const factory = await hre.ethers.getContractFactory("TestLYT");
+    const factory = await hre.ethers.getContractFactory("TestERC20");
     const contract = (await factory
         .connect(accounts.deployer)
-        .deploy(accounts.deployer.address, accounts.protocolFee.address)) as TestLYT;
+        .deploy(accounts.deployer.address)) as TestERC20;
     await contract.deployed();
     await contract.deployTransaction.wait();
 
     const balance = await contract.balanceOf(accounts.deployer.address);
-    console.log(`TestLYT token's owner: ${accounts.deployer.address}`);
-    console.log(`TestLYT token's balance of owner: ${new BOACoin(balance).toDisplayString(true, 2)}`);
+    console.log(`TestERC20 token's owner: ${accounts.deployer.address}`);
+    console.log(`TestERC20 token's balance of owner: ${new BOACoin(balance).toDisplayString(true, 2)}`);
 
     deployment.addContract(contractName, contract.address, contract);
     console.log(`Deployed ${contractName} to ${contract.address}`);
@@ -158,13 +158,13 @@ async function deployBridge(accounts: IAccount, deployment: Deployments) {
     const contractName = "Bridge";
     console.log(`Deploy ${contractName}...`);
 
-    if (deployment.getContract("BridgeValidator") === undefined || deployment.getContract("TestLYT") === undefined) {
+    if (deployment.getContract("BridgeValidator") === undefined || deployment.getContract("TestERC20") === undefined) {
         console.error("Contract is not deployed!");
         return;
     }
 
     await hre.changeNetwork(deployment.network);
-    const factory = await hre.ethers.getContractFactory("Bridge");
+    const factory = await hre.ethers.getContractFactory("NonDelegatedBridge");
     const contract = (await hre.upgrades.deployProxy(
         factory.connect(accounts.deployer),
         [deployment.getContractAddress("BridgeValidator"), accounts.protocolFee.address],
@@ -172,7 +172,7 @@ async function deployBridge(accounts: IAccount, deployment: Deployments) {
             initializer: "initialize",
             kind: "uups",
         }
-    )) as Bridge;
+    )) as NonDelegatedBridge;
     await contract.deployed();
     await contract.deployTransaction.wait();
     deployment.addContract(contractName, contract.address, contract);

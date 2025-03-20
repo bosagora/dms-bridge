@@ -44,6 +44,13 @@ function getAccounts() {
         accounts.push(process.env.DEPLOYER_SIDE_CHAIN);
     }
 
+    if (process.env.OWNER !== undefined && process.env.OWNER.trim() !== "" && reg_bytes64.test(process.env.OWNER)) {
+        accounts.push(process.env.OWNER);
+    } else {
+        process.env.OWNER = Wallet.createRandom().privateKey;
+        accounts.push(process.env.OWNER);
+    }
+
     if (
         process.env.PROTOCOL_FEE !== undefined &&
         process.env.PROTOCOL_FEE.trim() !== "" &&
@@ -148,6 +155,11 @@ const config = {
         bosagora_devnet: {
             url: "http://localhost:8545",
             chainId: 24680,
+            accounts: getAccounts(),
+        },
+        production_outer: {
+            url: process.env.PRODUCTION_OUTER_URL || "",
+            chainId: Number(process.env.PRODUCTION_OUTER_CHAIN_ID || "79"),
             accounts: getAccounts(),
         },
         production_main: {

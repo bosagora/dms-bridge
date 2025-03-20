@@ -16,7 +16,8 @@
         "formatting:write": "prettier '**/*.{json,sol,ts,js,yaml}' --write",
         "test:local": "test-local/start-test.sh",
         "test:01-Collector": "TESTING=true hardhat test test/01-Collector.test.ts",
-        "test:02-Bridge": "TESTING=true hardhat test test/02-Bridge.test.ts"
+        "test:02-Bridge": "TESTING=true hardhat test test/02-Bridge.test.ts",
+        "test:03-NonDelegatedBridge": "TESTING=true hardhat test test/03-NonDelegatedBridge.test.ts"
     },
     "repository": {
         "type": "git",
@@ -82,7 +83,7 @@
         "hardhat": "^2.12.7",
         "hardhat-gas-reporter": "^1.0.7",
         "ip": "^2.0.1",
-        "kios-bridge-contracts-v2": "~2.5.0",
+        "kios-bridge-contracts-v2": "~2.6.0",
         "loyalty-tokens": "~2.1.1",
         "multisig-wallet-contracts": "~2.0.0",
         "mybatis-mapper": "^0.7.1",

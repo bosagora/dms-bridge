@@ -1,5 +1,5 @@
 import "@nomiclabs/hardhat-ethers";
-import { BIP20DelegatedTransfer, IBridge, IBridge__factory } from "../../typechain-types";
+import { ERC20, IBridge, IBridge__factory } from "../../typechain-types";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
 import { ValidatorStorage } from "../storage/ValidatorStorage";
@@ -19,8 +19,8 @@ export class BridgeScheduler extends Scheduler {
     private _validators: Validator[] | undefined;
     private _metrics: Metrics | undefined;
 
-    private _tokenA: BIP20DelegatedTransfer | undefined;
-    private _tokenB: BIP20DelegatedTransfer | undefined;
+    private _tokenA: ERC20 | undefined;
+    private _tokenB: ERC20 | undefined;
 
     private _bridgeA: IBridge | undefined;
     private _bridgeB: IBridge | undefined;
